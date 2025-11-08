@@ -190,7 +190,7 @@ export default function PatientDashboard() {
 
         {activeTab === 'appointments' && (
           <div className="appointments-tab">
-            <h3>Mis Turnos</h3>
+            <h3 className="section-title">Mis Turnos</h3>
             {loading ? (
               <div className="loading">Cargando turnos...</div>
             ) : appointments.length === 0 ? (
@@ -215,6 +215,9 @@ export default function PatientDashboard() {
                       <span className={`status ${appointment.status?.toLowerCase() || 'pendiente'}`}>
                         {appointment.status || 'Pendiente'}
                       </span>
+                      {appointment.status === 'Cancelado' && appointment.cancel_reason && (
+                        <p className="cancel-reason">Motivo: {appointment.cancel_reason}</p>
+                      )}
                     </div>
                     <div className="appointment-actions">
                       {appointment.status !== 'Cancelado' && (

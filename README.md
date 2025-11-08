@@ -1,11 +1,10 @@
 # Turnos Médicos — Boilerplate (sin schema)
 
 Stack: **React (Vite) + Node/Express + MySQL**. Incluye autenticación con **JWT**, roles y **recuperación de contraseña**.
-Este paquete NO trae el schema SQL porque lo manejás desde tu documento / script.
 
 ## Requisitos
 - Node.js 18+
-- MySQL 8+ (o MariaDB compatible)
+- MySQL 8+ 
 
 ## 1) Base de datos
 Importá tu esquema en la base `turnos_db` asegurando:
@@ -38,4 +37,14 @@ npm run dev
 # App: http://localhost:5173
 ```
 
-> Ajustá `VITE_API_URL` si tu backend corre en otro host/puerto.
+## LOGUEARSE COMO ADMIN
+
+mail: admin@turnos.local
+contraseña: Clave123!
+
+## LOGUEARSE COMO MEDICO
+
+mail: cualquier mail de medico que se encuentre en schema.sql, por ej: sofia.paredes@cardio.local
+contraseña: Clave123!
+
+

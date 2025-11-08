@@ -7,6 +7,7 @@ import ForgotPassword from './pages/ForgotPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
 import Dashboard from './pages/Dashboard.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
+import Especialidades from './pages/Especialidades.jsx';
 
 export default function App() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export default function App() {
                   <Link to="/register">Registrarse</Link>
                 </>
               )}
-            </nav>
+          </nav>
             <ProtectedRoute><Dashboard/></ProtectedRoute>
           </>
         } />

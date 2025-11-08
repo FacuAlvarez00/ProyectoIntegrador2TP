@@ -12,18 +12,48 @@ export async function register({ nombre, apellido='', email, password, role, dni
   if (!isStrong(password)) throw new BadRequest('Contraseña débil');
 
   const pool = await getPool();
-  const [exists] = await pool.query('SELECT id FROM usuarios WHERE email = ?', [email]);
-  if (exists.length) throw new BadRequest('Email ya registrado');
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    const [exists] = await conn.query('SELECT id FROM usuarios WHERE email = ?', [email]);
+    if (exists.length) {
+      await conn.rollback();
+      throw new BadRequest('Email ya registrado');
+    }
 
-  const hash = await bcrypt.hash(password, 10);
-  const [result] = await pool.query(
-    `INSERT INTO usuarios (nombre, apellido, email, hash_contrasena, rol, dni, email_verificado)
-     VALUES (?,?,?,?,?,?,0)`,
-    [nombre, apellido, email, hash, role, dni || null]
-  );
-  const user = { id: result.insertId, name: nombre + (apellido ? ' ' + apellido : ''), email, role };
-  const token = signToken({ id: user.id, name: user.name, email: user.email, role: user.role });
-  return { user, token };
+    const hash = await bcrypt.hash(password, 10);
+    const [result] = await conn.query(
+      `INSERT INTO usuarios (nombre, apellido, email, hash_contrasena, rol, dni, email_verificado)
+       VALUES (?,?,?,?,?,?,0)`,
+      [nombre, apellido, email, hash, role, dni || null]
+    );
+    const userId = result.insertId;
+
+    if (role === 'PACIENTE') {
+      await conn.query(
+        `INSERT INTO pacientes (id_usuario, fecha_nacimiento, genero)
+         VALUES (?, NULL, NULL)`,
+        [userId]
+      );
+    } else if (role === 'MEDICO') {
+      await conn.query(
+        `INSERT INTO doctores (id_usuario, numero_licencia, bio)
+         VALUES (?, '', NULL)`,
+        [userId]
+      );
+    }
+
+    await conn.commit();
+
+    const user = { id: userId, name: nombre + (apellido ? ' ' + apellido : ''), email, role };
+    const token = signToken({ id: user.id, name: user.name, email: user.email, role: user.role });
+    return { user, token };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
 }
 
 export async function login({ email, password }) {
