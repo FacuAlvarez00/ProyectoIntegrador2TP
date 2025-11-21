@@ -189,7 +189,7 @@ ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 
 -- Usuario admin de ejemplo (hash dummy, reemplazar)
 INSERT INTO usuarios (dni, email, hash_contrasena, nombre, apellido, rol, email_verificado)
-VALUES ('00000000', 'admin@turnos.local', '$2a$10$abcdefghijklmnopqrstuv', 'Admin', 'Principal', 'ADMIN', 1)
+VALUES ('00000000', 'admin@turnos.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Admin', 'Principal', 'ADMIN', 1)
 ON DUPLICATE KEY UPDATE email=email;
 
 -- Médicos de ejemplo

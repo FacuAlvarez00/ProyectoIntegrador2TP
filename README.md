@@ -47,4 +47,12 @@ contraseña: Clave123!
 mail: cualquier mail de medico que se encuentre en schema.sql, por ej: sofia.paredes@cardio.local
 contraseña: Clave123!
 
+## COMANDO PARA USAR CON DOCKER
+Abrir terminal o CMD en la carpeta raíz del proyecto (donde se encuentra el archivo `docker-compose.yml`) y ejecutar:
+```bash
+docker compose up --build -d
+```
+Esto levantará los contenedores para el backend, frontend y la base de datos MySQL.
+Luego, podés acceder a la aplicación en `http://localhost:5173`.
+
 
