@@ -184,7 +184,7 @@ INSERT INTO estados (valor) VALUES
 ON DUPLICATE KEY UPDATE valor = VALUES(valor);
 
 INSERT INTO especialidades (nombre) VALUES
-  ('Clínica Médica'), ('Cardiología'), ('Pediatría'), ('Dermatología')
+  ('Clinica Medica'), ('Cardiologia'), ('Pediatria'), ('Dermatologia')
 ON DUPLICATE KEY UPDATE nombre = VALUES(nombre);
 
 -- Usuario admin de ejemplo (hash dummy, reemplazar)
@@ -321,7 +321,7 @@ ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(
 INSERT INTO doctores_especialidades (id_doctor, id_especialidad)
 SELECT u.id, e.id
 FROM usuarios u
-JOIN especialidades e ON e.nombre = 'Cardiología'
+JOIN especialidades e ON e.nombre = 'Cardiologia'
 WHERE u.email IN (
   'sofia.paredes@cardio.local',
   'martin.carrizo@cardio.local',
@@ -334,7 +334,7 @@ ON DUPLICATE KEY UPDATE id_doctor = id_doctor;
 INSERT INTO doctores_especialidades (id_doctor, id_especialidad)
 SELECT u.id, e.id
 FROM usuarios u
-JOIN especialidades e ON e.nombre = 'Clínica Médica'
+JOIN especialidades e ON e.nombre = 'Clinica Medica'
 WHERE u.email IN (
   'diego.montiel@clinica.local',
   'gabriela.arce@clinica.local',
@@ -347,7 +347,7 @@ ON DUPLICATE KEY UPDATE id_doctor = id_doctor;
 INSERT INTO doctores_especialidades (id_doctor, id_especialidad)
 SELECT u.id, e.id
 FROM usuarios u
-JOIN especialidades e ON e.nombre = 'Dermatología'
+JOIN especialidades e ON e.nombre = 'Dermatologia'
 WHERE u.email IN (
   'florencia.muro@derma.local',
   'adrian.castillo@derma.local',
@@ -360,7 +360,7 @@ ON DUPLICATE KEY UPDATE id_doctor = id_doctor;
 INSERT INTO doctores_especialidades (id_doctor, id_especialidad)
 SELECT u.id, e.id
 FROM usuarios u
-JOIN especialidades e ON e.nombre = 'Pediatría'
+JOIN especialidades e ON e.nombre = 'Pediatria'
 WHERE u.email IN (
   'mariano.albornoz@pedia.local',
   'soledad.villar@pedia.local',
