@@ -8,6 +8,7 @@ import appointmentsRoutes from './routes/appointments.routes.js';
 import specialtiesRoutes from './routes/specialties.routes.js';
 import doctorsRoutes from './routes/doctors.routes.js';
 import patientsRoutes from './routes/patients.routes.js';
+import usersRoutes from './routes/users.routes.js';
 import { errorHandler } from './middleware/error.js';
 
 const app = express();
@@ -23,6 +24,7 @@ app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/specialties', specialtiesRoutes);
 app.use('/api/doctors', doctorsRoutes);
 app.use('/api/patients', patientsRoutes);
+app.use('/api/users', usersRoutes);
 
 app.use(errorHandler);
 export default app;

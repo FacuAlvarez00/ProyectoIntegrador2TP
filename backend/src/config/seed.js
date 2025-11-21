@@ -41,6 +41,19 @@ export async function seedDemoData() {
     connection = await pool.getConnection();
     await connection.beginTransaction();
 
+    const [[{ db }]] = await connection.query('SELECT DATABASE() AS db');
+    const [activoColumn] = await connection.query(
+      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
+       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'pacientes' AND COLUMN_NAME = 'activo'`,
+      [db]
+    );
+    if (!activoColumn.length) {
+      await connection.query(
+        'ALTER TABLE pacientes ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1'
+      );
+    }
+    await connection.query('UPDATE pacientes SET activo = 1 WHERE activo IS NULL');
+
     await connection.query(`
       CREATE TABLE IF NOT EXISTS turnos_cancelaciones (
         id INT AUTO_INCREMENT PRIMARY KEY,

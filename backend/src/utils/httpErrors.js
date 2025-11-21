@@ -10,3 +10,6 @@ export class BadRequest extends HttpError {
 export class Unauthorized extends HttpError {
   constructor(message='Unauthorized'){ super(401, message); }
 }
+export class NotFound extends HttpError {
+  constructor(message='Not Found'){ super(404, message); }
+}

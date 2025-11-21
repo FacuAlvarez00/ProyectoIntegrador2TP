@@ -9,6 +9,7 @@ export default function PatientDashboard() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const user = JSON.parse(localStorage.getItem('user') || '{}');
+  const isInactive = user?.role === 'PACIENTE' && user?.activo === false;
 
   // Estado para nuevo turno
   const [newAppointment, setNewAppointment] = useState({
@@ -61,6 +62,10 @@ export default function PatientDashboard() {
   const handleBookAppointment = async (e) => {
     e.preventDefault();
     setError('');
+    if (isInactive) {
+      setError('Tu cuenta está inactiva. No podés reservar turnos por el momento.');
+      return;
+    }
     
     if (!newAppointment.doctor || !newAppointment.date || !newAppointment.time) {
       setError('Por favor completa todos los campos');
@@ -88,6 +93,10 @@ export default function PatientDashboard() {
   };
 
   const handleCancelAppointment = async (appointmentId) => {
+    if (isInactive) {
+      setError('Tu cuenta está inactiva. Comunicate con administración para gestionar turnos.');
+      return;
+    }
     if (!confirm('¿Estás seguro de que quieres cancelar este turno?')) return;
     
     try {
@@ -120,7 +129,9 @@ export default function PatientDashboard() {
         <h1>Panel del Paciente</h1>
         <div className="user-info">
           <span className="welcome">Hola, {user.name}</span>
-          <span className="role-badge">PACIENTE</span>
+          <span className={`role-badge${isInactive ? ' inactive' : ''}`}>
+            PACIENTE{isInactive ? ' • Inactivo' : ''}
+          </span>
         </div>
       </div>
 
@@ -146,6 +157,11 @@ export default function PatientDashboard() {
       </div>
 
       {error && <div className="error-message">{error}</div>}
+      {isInactive && (
+        <div className="inactive-banner">
+          Tu cuenta está inactiva. Todos los turnos se muestran como cancelados hasta que un administrador la reactive.
+        </div>
+      )}
 
       <div className="dashboard-content">
         {activeTab === 'overview' && (
@@ -154,16 +170,17 @@ export default function PatientDashboard() {
               <div className="stat-card">
                 <h3>Turnos Activos</h3>
                 <div className="stat-number">
-                  {appointments.filter(apt => apt.status !== 'Cancelado').length}
+                  {isInactive ? 0 : appointments.filter(apt => apt.status !== 'Cancelado').length}
                 </div>
               </div>
               <div className="stat-card">
                 <h3>Próximo Turno</h3>
                 <div className="stat-text">
-                  {appointments.length > 0 
-                    ? formatDate(appointments[0].date) 
-                    : 'Sin turnos programados'
-                  }
+                  {isInactive
+                    ? 'Cuenta inactiva'
+                    : appointments.length > 0 && appointments[0].status !== 'Cancelado'
+                      ? formatDate(appointments[0].date)
+                      : 'Sin turnos programados'}
                 </div>
               </div>
             </div>
@@ -173,7 +190,8 @@ export default function PatientDashboard() {
               <div className="action-buttons">
                 <button 
                   className="action-btn primary"
-                  onClick={() => setActiveTab('book')}
+                  onClick={() => (isInactive ? setError('Tu cuenta está inactiva. Comunicate con administración.') : setActiveTab('book'))}
+                  disabled={isInactive}
                 >
                   📅 Reservar Turno
                 </button>
@@ -198,7 +216,8 @@ export default function PatientDashboard() {
                 <p>No tienes turnos programados</p>
                 <button 
                   className="action-btn primary"
-                  onClick={() => setActiveTab('book')}
+                  onClick={() => (isInactive ? setError('Tu cuenta está inactiva. Comunicate con administración.') : setActiveTab('book'))}
+                  disabled={isInactive}
                 >
                   Reservar mi primer turno
                 </button>
@@ -212,15 +231,16 @@ export default function PatientDashboard() {
                       <p className="specialty">{appointment.specialty_name || 'Clínica Médica'}</p>
                       <p className="date">{formatDate(appointment.date)}</p>
                       <p className="time">{formatTime(appointment.time)}</p>
-                      <span className={`status ${appointment.status?.toLowerCase() || 'pendiente'}`}>
-                        {appointment.status || 'Pendiente'}
+                      {isInactive && <span className="inactive-tag">Cuenta inactiva</span>}
+                      <span className={`status ${(isInactive ? 'Cancelado' : (appointment.status || 'Pendiente')).toLowerCase()}`}>
+                        {isInactive ? 'Cancelado' : (appointment.status || 'Pendiente')}
                       </span>
-                      {appointment.status === 'Cancelado' && appointment.cancel_reason && (
+                      {!isInactive && appointment.status === 'Cancelado' && appointment.cancel_reason && (
                         <p className="cancel-reason">Motivo: {appointment.cancel_reason}</p>
                       )}
                     </div>
                     <div className="appointment-actions">
-                      {appointment.status !== 'Cancelado' && (
+                      {!isInactive && appointment.status !== 'Cancelado' && (
                         <button 
                           className="cancel-btn"
                           onClick={() => handleCancelAppointment(appointment.id)}
@@ -342,10 +362,15 @@ export default function PatientDashboard() {
                 </div>
               </div>
 
-              <button type="submit" className="submit-btn">
+              <button type="submit" className="submit-btn" disabled={isInactive}>
                 Reservar Turno
               </button>
             </form>
+            {isInactive && (
+              <p className="inactive-note">
+                Tu cuenta está inactiva, por lo que no podrás reservar turnos hasta que un administrador la reactive.
+              </p>
+            )}
           </div>
         )}
       </div>

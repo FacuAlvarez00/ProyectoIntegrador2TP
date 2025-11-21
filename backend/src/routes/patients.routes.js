@@ -5,6 +5,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 const router = Router();
 
 router.get('/', requireAuth, requireRole('ADMIN'), ctrl.list);
+router.patch('/:id/status', requireAuth, requireRole('ADMIN'), ctrl.toggleStatus);
 
 export default router;
 

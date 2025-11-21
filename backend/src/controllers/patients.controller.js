@@ -9,3 +9,13 @@ export async function list(req, res, next) {
   }
 }
 
+export async function toggleStatus(req, res, next) {
+  try {
+    const id = Number(req.params.id);
+    const result = await svc.togglePatientStatus(id);
+    res.json(result);
+  } catch (err) {
+    next(err);
+  }
+}
+

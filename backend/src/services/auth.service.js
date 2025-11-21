@@ -45,8 +45,20 @@ export async function register({ nombre, apellido='', email, password, role, dni
 
     await conn.commit();
 
-    const user = { id: userId, name: nombre + (apellido ? ' ' + apellido : ''), email, role };
-    const token = signToken({ id: user.id, name: user.name, email: user.email, role: user.role });
+    const user = {
+      id: userId,
+      name: nombre + (apellido ? ' ' + apellido : ''),
+      email,
+      role,
+      activo: role === 'PACIENTE' ? true : undefined
+    };
+    const token = signToken({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      ...(user.activo !== undefined ? { activo: user.activo } : {})
+    });
     return { user, token };
   } catch (err) {
     await conn.rollback();
@@ -59,16 +71,31 @@ export async function register({ nombre, apellido='', email, password, role, dni
 export async function login({ email, password }) {
   const pool = await getPool();
   const [rows] = await pool.query(
-    `SELECT id, nombre, apellido, email, hash_contrasena, rol
-     FROM usuarios WHERE email = ?`,
+    `SELECT u.id, u.nombre, u.apellido, u.email, u.hash_contrasena, u.rol,
+            IFNULL(p.activo, 1) AS activo
+     FROM usuarios u
+     LEFT JOIN pacientes p ON p.id_usuario = u.id
+     WHERE u.email = ?`,
     [email]
   );
   if (!rows.length) throw new Unauthorized('Credenciales inválidas');
   const u = rows[0];
   const ok = await bcrypt.compare(password, u.hash_contrasena);
   if (!ok) throw new Unauthorized('Credenciales inválidas');
-  const user = { id: u.id, name: (u.nombre + (u.apellido ? ' ' + u.apellido : '')), email: u.email, role: u.rol };
-  const token = signToken({ id: user.id, name: user.name, email: user.email, role: user.role });
+  const user = {
+    id: u.id,
+    name: (u.nombre + (u.apellido ? ' ' + u.apellido : '')),
+    email: u.email,
+    role: u.rol,
+    activo: u.rol === 'PACIENTE' ? Boolean(u.activo) : undefined
+  };
+  const token = signToken({
+    id: user.id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    ...(user.activo !== undefined ? { activo: user.activo } : {})
+  });
   return { user, token };
 }
 

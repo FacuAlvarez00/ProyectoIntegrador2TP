@@ -42,6 +42,7 @@ CREATE TABLE pacientes (
   id_usuario        INT PRIMARY KEY,
   fecha_nacimiento  DATE,
   genero            VARCHAR(20),
+  activo            TINYINT(1) NOT NULL DEFAULT 1,
   CONSTRAINT fk_pacientes_usuario
     FOREIGN KEY (id_usuario) REFERENCES usuarios(id)
       ON UPDATE CASCADE ON DELETE CASCADE
