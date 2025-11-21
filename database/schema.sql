@@ -1,4 +1,3 @@
-
 -- ===============================================
 --  turnos_db  — Esquema completo (según PDF)
 -- ===============================================
@@ -30,6 +29,7 @@ CREATE TABLE usuarios (
   apellido          VARCHAR(255) NOT NULL,
   rol               VARCHAR(255) NOT NULL,                 -- 'PACIENTE' | 'MEDICO' | 'ADMIN'
   email_verificado  BOOLEAN NOT NULL DEFAULT 0,
+  activo            BOOLEAN NOT NULL DEFAULT 1,
   creado            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   INDEX idx_usuarios_email (email),
   INDEX idx_usuarios_dni (dni)
@@ -195,18 +195,18 @@ ON DUPLICATE KEY UPDATE email=email;
 -- Médicos de ejemplo
 INSERT INTO usuarios (dni, email, hash_contrasena, nombre, apellido, rol, email_verificado)
 VALUES
-  ('30000001', 'sofia.paredes@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Sofía', 'Paredes', 'MEDICO', 1),
-  ('30000002', 'martin.carrizo@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Martín', 'Carrizo', 'MEDICO', 1),
+  ('30000001', 'sofia.paredes@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Sofia', 'Paredes', 'MEDICO', 1),
+  ('30000002', 'martin.carrizo@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Martin', 'Carrizo', 'MEDICO', 1),
   ('30000003', 'carolina.vega@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Carolina', 'Vega', 'MEDICO', 1),
   ('30000004', 'lucas.ferrero@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Lucas', 'Ferrero', 'MEDICO', 1),
   ('30000005', 'natalia.mansilla@cardio.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Natalia', 'Mansilla', 'MEDICO', 1),
   ('30000011', 'diego.montiel@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Diego', 'Montiel', 'MEDICO', 1),
   ('30000012', 'gabriela.arce@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Gabriela', 'Arce', 'MEDICO', 1),
   ('30000013', 'ricardo.funes@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Ricardo', 'Funes', 'MEDICO', 1),
-  ('30000014', 'veronica.nadal@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Verónica', 'Nadal', 'MEDICO', 1),
-  ('30000015', 'sebastian.ledesma@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Sebastián', 'Ledesma', 'MEDICO', 1),
+  ('30000014', 'veronica.nadal@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Veronica', 'Nadal', 'MEDICO', 1),
+  ('30000015', 'sebastian.ledesma@clinica.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Sebastian', 'Ledesma', 'MEDICO', 1),
   ('30000021', 'florencia.muro@derma.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Florencia', 'Muro', 'MEDICO', 1),
-  ('30000022', 'adrian.castillo@derma.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Adrián', 'Castillo', 'MEDICO', 1),
+  ('30000022', 'adrian.castillo@derma.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Adrian', 'Castillo', 'MEDICO', 1),
   ('30000023', 'macarena.risso@derma.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Macarena', 'Risso', 'MEDICO', 1),
   ('30000024', 'federico.basile@derma.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Federico', 'Basile', 'MEDICO', 1),
   ('30000025', 'romina.puccio@derma.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Romina', 'Puccio', 'MEDICO', 1),
@@ -214,107 +214,77 @@ VALUES
   ('30000032', 'soledad.villar@pedia.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Soledad', 'Villar', 'MEDICO', 1),
   ('30000033', 'gaston.arena@pedia.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Gastón', 'Arena', 'MEDICO', 1),
   ('30000034', 'mariela.cuffia@pedia.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Mariela', 'Cuffia', 'MEDICO', 1),
-  ('30000035', 'nicolas.iglesias@pedia.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Nicolás', 'Iglesias', 'MEDICO', 1)
+  ('30000035', 'nicolas.iglesias@pedia.local', '$2a$10$IEeqngcUwiMm2oNf8FNqVOAyJcSqvE9M1Fv1xMUJLgP9o3rJtxf6i', 'Nicolas', 'Iglesias', 'MEDICO', 1)
 ON DUPLICATE KEY UPDATE email = email;
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CARD-1001', 'Especialista en cardiología preventiva'
+SELECT id, 'CARD-1001', 'Especialista en cardiologia preventiva'
 FROM usuarios WHERE email = 'sofia.paredes@cardio.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CARD-1002', 'Cardiólogo clínico con enfoque en rehabilitación'
+SELECT id, 'CARD-1002', 'Cardiologo clinico con enfoque en rehabilitacion'
 FROM usuarios WHERE email = 'martin.carrizo@cardio.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CARD-1003', 'Cardióloga intervencionista'
+SELECT id, 'CARD-1003', 'Cardiologa intervencionista'
 FROM usuarios WHERE email = 'carolina.vega@cardio.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CARD-1004', 'Especialista en cardiología pediátrica'
+SELECT id, 'CARD-1004', 'Especialista en cardiologia pediatrica'
 FROM usuarios WHERE email = 'lucas.ferrero@cardio.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CARD-1005', 'Cardióloga con foco en arritmias'
+SELECT id, 'CARD-1005', 'Cardiologa con foco en arritmias'
 FROM usuarios WHERE email = 'natalia.mansilla@cardio.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CLIN-2001', 'Médico clínico generalista'
+SELECT id, 'CLIN-2001', 'Medico clínico generalista'
 FROM usuarios WHERE email = 'diego.montiel@clinica.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CLIN-2002', 'Clínica médica con orientación en adultos mayores'
+SELECT id, 'CLIN-2002', 'Clinica medica con orientacion en adultos mayores'
 FROM usuarios WHERE email = 'gabriela.arce@clinica.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CLIN-2003', 'Médico clínico y auditor'
+SELECT id, 'CLIN-2003', 'Medico clinico y auditor'
 FROM usuarios WHERE email = 'ricardo.funes@clinica.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CLIN-2004', 'Clínica médica con enfoque en enfermedades crónicas'
+SELECT id, 'CLIN-2004', 'Clinica medica con enfoque en enfermedades cronicas'
 FROM usuarios WHERE email = 'veronica.nadal@clinica.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'CLIN-2005', 'Clínico orientado a medicina preventiva'
+SELECT id, 'CLIN-2005', 'Clinico orientado a medicina preventiva'
 FROM usuarios WHERE email = 'sebastian.ledesma@clinica.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'DERM-3001', 'Dermatóloga especialista en acné adulto'
+SELECT id, 'DERM-3001', 'Dermatologa especialista en acne adulto'
 FROM usuarios WHERE email = 'florencia.muro@derma.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'DERM-3002', 'Dermatología clínica y estética'
+SELECT id, 'DERM-3002', 'Dermatologia clinica y estetica'
 FROM usuarios WHERE email = 'adrian.castillo@derma.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'DERM-3003', 'Dermatóloga pediátrica'
+SELECT id, 'DERM-3003', 'Dermatiloga pediatrica'
 FROM usuarios WHERE email = 'macarena.risso@derma.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'DERM-3004', 'Dermatología quirúrgica y lesiones pigmentadas'
+SELECT id, 'DERM-3004', 'Dermatologia quirurgica y lesiones pigmentadas'
 FROM usuarios WHERE email = 'federico.basile@derma.local'
-ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
-
-INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'DERM-3005', 'Dermatóloga especialista en alergias cutáneas'
-FROM usuarios WHERE email = 'romina.puccio@derma.local'
-ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
-
-INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'PEDS-4001', 'Pediatra general con enfoque en desarrollo infantil'
-FROM usuarios WHERE email = 'mariano.albornoz@pedia.local'
-ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
-
-INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'PEDS-4002', 'Pediatría y nutrición infantil'
-FROM usuarios WHERE email = 'soledad.villar@pedia.local'
-ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
-
-INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'PEDS-4003', 'Pediatra con especialización en neonatología'
-FROM usuarios WHERE email = 'gaston.arena@pedia.local'
-ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
-
-INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'PEDS-4004', 'Pediatría clínica y seguimiento del crecimiento'
-FROM usuarios WHERE email = 'mariela.cuffia@pedia.local'
-ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
-
-INSERT INTO doctores (id_usuario, numero_licencia, bio)
-SELECT id, 'PEDS-4005', 'Pediatra orientado a enfermedades respiratorias'
-FROM usuarios WHERE email = 'nicolas.iglesias@pedia.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 -- Relaciones doctores-especialidades

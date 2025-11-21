@@ -11,6 +11,7 @@ router.use(requireRole('ADMIN'));
 router.get('/', ctrl.getAllUsers);
 router.post('/', ctrl.createAdmin);
 router.patch('/:id/role', ctrl.updateUserRole);
+router.patch('/:id/status', ctrl.toggleStatus);
 router.put('/:id', ctrl.updateUser);
 
 export default router;
