@@ -72,12 +72,14 @@ export async function login({ email, password }) {
     const pool = await getPool();
     const [rows] = await pool.query(
         `SELECT u.id, u.nombre, u.apellido, u.email, u.hash_contrasena, u.rol,
-            COALESCE(u.activo, IFNULL(p.activo, 1)) AS activo
+            COALESCE(u.activo, IFNULL(p.activo, 1)) AS activo,
+            u.intentos_fallidos, u.bloqueado_hasta
      FROM usuarios u
      LEFT JOIN pacientes p ON p.id_usuario = u.id
      WHERE u.email = ?`,
         [email]
     );
+
     if (!rows.length) throw new Unauthorized('Credenciales inválidas');
     const u = rows[0];
 
@@ -87,8 +89,39 @@ export async function login({ email, password }) {
         throw new Unauthorized('Cuenta inactiva');
     }
 
+    // Verificar si la cuenta está temporalmente bloqueada
+    if (u.bloqueado_hasta && new Date(u.bloqueado_hasta) > new Date()) {
+        const checkTime = Math.ceil((new Date(u.bloqueado_hasta) - new Date()) / 60000);
+        throw new Unauthorized(`Cuenta temporalmente bloqueada por múltiples intentos fallidos. Intente nuevamente en ${checkTime} minutos.`);
+    }
+
     const ok = await bcrypt.compare(password, u.hash_contrasena);
-    if (!ok) throw new Unauthorized('Credenciales inválidas');
+    if (!ok) {
+        const fallos = (u.intentos_fallidos || 0) + 1;
+        
+        if (fallos >= 3) {
+            // Bloqueamos la cuenta por 15 minutos exactos del primer error
+            const bloqueado_hasta = new Date(Date.now() + 15 * 60000);
+            await pool.query(
+                `UPDATE usuarios SET intentos_fallidos = ?, bloqueado_hasta = ? WHERE id = ?`, 
+                [fallos, bloqueado_hasta, u.id]
+            );
+            throw new Unauthorized('Cuenta temporalmente bloqueada por múltiples intentos fallidos. Intente nuevamente en 15 minutos.');
+        } else {
+            // Guardamos el intento fallido
+            await pool.query(
+                `UPDATE usuarios SET intentos_fallidos = ? WHERE id = ?`, 
+                [fallos, u.id]
+            );
+            throw new Unauthorized('Credenciales inválidas');
+        }
+    }
+
+    // Restablecer los intentos en login exitoso
+    if (u.intentos_fallidos > 0 || u.bloqueado_hasta) {
+        await pool.query(`UPDATE usuarios SET intentos_fallidos = 0, bloqueado_hasta = NULL WHERE id = ?`, [u.id]);
+    }
+
     const user = {
         id: u.id,
         name: (u.nombre + (u.apellido ? ' ' + u.apellido : '')),

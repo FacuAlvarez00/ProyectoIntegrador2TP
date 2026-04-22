@@ -70,3 +70,24 @@ export async function cancelByDoctor(req, res, next) {
   }
 }
 
+export async function listAllForAdmin(req, res, next) {
+  try {
+    const { status, doctor_id, date } = req.query;
+    const data = await svc.listAll({ status, doctorId: doctor_id ? Number(doctor_id) : null, date });
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function update(req, res, next) {
+  try {
+    const { date, time } = req.body;
+    const appointmentId = Number(req.params.id);
+    const data = await svc.updateAppointment(appointmentId, req.user.id, req.user.role, { date, time });
+    res.json(data);
+  } catch (err) {
+    next(err);
+  }
+}
+

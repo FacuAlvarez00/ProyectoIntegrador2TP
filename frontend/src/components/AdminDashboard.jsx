@@ -6,7 +6,8 @@ const tabs = [
     { id: 'patients', label: 'Pacientes' },
     { id: 'specialties', label: 'Especialidades' },
     { id: 'doctors', label: 'Médicos' },
-    { id: 'users', label: 'Usuarios' }
+    { id: 'users', label: 'Usuarios' },
+    { id: 'appointments', label: 'Turnos' } // <--- [NUEVO] Tab de Turnos
 ];
 
 function toTitleCase(str = '') {
@@ -40,8 +41,38 @@ export default function AdminDashboard() {
     const [currentPage, setCurrentPage] = useState(1);
     const usersPerPage = 10;
 
+    // --- [NUEVO] ESTADOS PARA TURNOS (HU17) ---
+    const [adminAppointments, setAdminAppointments] = useState([]);
+    const [appointmentFilters, setAppointmentFilters] = useState({ status: '', doctor_id: '', date: '' });
+    
     const token = localStorage.getItem('token');
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
+
+    // --- [NUEVO] FUNCIÓN PARA CARGAR TURNOS ---
+    async function loadAppointments() {
+        setLoading(true);
+        try {
+            let url = '/appointments/all?';
+            const params = new URLSearchParams();
+            if (appointmentFilters.status) params.append('status', appointmentFilters.status);
+            if (appointmentFilters.doctor_id) params.append('doctor_id', appointmentFilters.doctor_id);
+            if (appointmentFilters.date) params.append('date', appointmentFilters.date);
+            
+            const data = await api(url + params.toString(), { token });
+            setAdminAppointments(data || []);
+        } catch (err) {
+            setError('Error al cargar turnos: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    // --- [NUEVO] EFECTO PARA RECARGAR CUANDO CAMBIAN FILTROS---
+    useEffect(() => {
+        if (activeTab === 'appointments') {
+            loadAppointments();
+        }
+    }, [activeTab, appointmentFilters]);
 
     useEffect(() => {
         loadAll();
@@ -534,318 +565,82 @@ export default function AdminDashboard() {
         }
     }
 
-    function renderUsers() {
-        const roleLabels = {
-            'ADMIN': 'Administrador',
-            'MEDICO': 'Médico',
-            'PACIENTE': 'Paciente'
-        };
-
-        // Filtrar usuarios por rol
-        const filteredUsers = users.filter(user => {
-            if (userRoleFilter === 'ALL') return true;
-            return user.role === userRoleFilter;
-        });
-
-        // Calcular paginación
-        const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
-        const startIndex = (currentPage - 1) * usersPerPage;
-        const endIndex = startIndex + usersPerPage;
-        const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
-
-        const goToPage = (page) => {
-            if (page >= 1 && page <= totalPages) {
-                setCurrentPage(page);
-            }
-        };
-
+    // --- [NUEVO] FUNCIÓN DE RENDERIZADO DE LA TABLA DE TURNOS ---
+    function renderAppointments() {
         return (
-            <div className="admin-users">
-                <div className="admin-form-card">
-                    <h3>Crear nuevo administrador</h3>
-                    <form onSubmit={handleCreateAdmin} className="admin-form">
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <input
-                                type="text"
-                                placeholder="Nombre *"
-                                value={newAdmin.nombre}
-                                onChange={(e) => setNewAdmin({ ...newAdmin, nombre: e.target.value })}
-                                required
-                            />
-                            <input
-                                type="text"
-                                placeholder="Apellido"
-                                value={newAdmin.apellido}
-                                onChange={(e) => setNewAdmin({ ...newAdmin, apellido: e.target.value })}
-                            />
-                        </div>
-                        <input
-                            type="email"
-                            placeholder="Email *"
-                            value={newAdmin.email}
-                            onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })}
-                            required
-                        />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                            <input
-                                type="password"
-                                placeholder="Contraseña * (mín. 8 caracteres)"
-                                value={newAdmin.password}
-                                onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })}
-                                required
-                                minLength={8}
-                            />
-                            <input
-                                type="text"
-                                placeholder="DNI (opcional)"
-                                value={newAdmin.dni}
-                                onChange={(e) => setNewAdmin({ ...newAdmin, dni: e.target.value })}
-                            />
-                        </div>
-                        <div className="admin-form-actions">
-                            <button type="submit" className="submit-btn">
-                                Crear administrador
-                            </button>
-                        </div>
-                    </form>
+            <div className="admin-table-card">
+                <div className="admin-table-header">
+                    <h3>Gestión de Turnos</h3>
+                    <span>{adminAppointments.length} turnos encontrados</span>
+                </div>
+                
+                <div className="admin-doctor-filters" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <select 
+                        value={appointmentFilters.status} 
+                        onChange={(e) => setAppointmentFilters({...appointmentFilters, status: e.target.value})}
+                    >
+                        <option value="">Todos los Estados</option>
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Confirmado">Confirmado</option>
+                        <option value="Atendido">Atendido</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+
+                    <select 
+                        value={appointmentFilters.doctor_id} 
+                        onChange={(e) => setAppointmentFilters({...appointmentFilters, doctor_id: e.target.value})}
+                    >
+                        <option value="">Todos los Médicos</option>
+                        {doctors.map(doc => (
+                            <option key={doc.id} value={doc.id}>{doc.name} - {toTitleCase(doc.specialty)}</option>
+                        ))}
+                    </select>
+
+                    <input 
+                        type="date" 
+                        value={appointmentFilters.date} 
+                        onChange={(e) => setAppointmentFilters({...appointmentFilters, date: e.target.value})}
+                    />
+                    
+                    <button 
+                        type="button"
+                        className="admin-secondary-btn" 
+                        onClick={() => setAppointmentFilters({ status: '', doctor_id: '', date: '' })}
+                    >
+                        Limpiar Filtros
+                    </button>
                 </div>
 
-                <div className="admin-table-card">
-                    <div className="admin-table-header">
-                        <h3>Usuarios registrados</h3>
-                        <span>
-                            Mostrando {paginatedUsers.length > 0 ? startIndex + 1 : 0}-{Math.min(endIndex, filteredUsers.length)} de {filteredUsers.length} usuarios
-                        </span>
-                    </div>
-                    <div className="admin-doctor-filters">
-                        <select
-                            value={userRoleFilter}
-                            onChange={(e) => {
-                                setUserRoleFilter(e.target.value);
-                                setCurrentPage(1);
-                            }}
-                        >
-                            <option value="ALL">Todos los roles</option>
-                            <option value="ADMIN">Administradores</option>
-                            <option value="MEDICO">Médicos</option>
-                            <option value="PACIENTE">Pacientes</option>
-                        </select>
-                    </div>
-                    <div className="admin-table-wrapper">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Email</th>
-                                    <th>DNI</th>
-                                    <th>Rol actual</th>
-                                    <th>Fecha registro</th>
-                                    <th style={{ textAlign: 'right', minWidth: '300px' }}>Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {paginatedUsers.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>
-                                            No hay usuarios para mostrar
-                                        </td>
-                                    </tr>
-                                ) : (
-                                    paginatedUsers.map(user => {
-                                        const isActive = user.activo !== null && user.activo !== undefined ? user.activo : true;
-                                        return (
-                                            <tr key={user.id}>
-                                                <td>{user.name}</td>
-                                                <td>{user.email}</td>
-                                                <td>{user.dni || '—'}</td>
-                                                <td>
-                                                    <span className={`admin-status-badge ${user.role === 'ADMIN' ? 'active' : user.role === 'MEDICO' ? '' : 'inactive'}`}>
-                                                        {roleLabels[user.role] || user.role}
-                                                    </span>
-                                                </td>
-                                                <td>{user.creado ? new Date(user.creado).toLocaleDateString('es-ES') : '—'}</td>
-                                                <td className="actions">
-                                                    <div className="admin-actions-group">
-                                                        <button
-                                                            type="button"
-                                                            className="admin-action-btn primary"
-                                                            disabled={updatingUserId === user.id || editingUser?.id === user.id}
-                                                            onClick={() => startEditUser(user)}
-                                                        >
-                                                            Modificar
-                                                        </button>
-                                                        <div className="admin-role-buttons">
-                                                            {user.role !== 'ADMIN' && (
-                                                                <button
-                                                                    type="button"
-                                                                    className="admin-action-btn small"
-                                                                    disabled={updatingUserId === user.id || editingUser?.id === user.id}
-                                                                    onClick={() => handleUpdateUserRole(user.id, 'ADMIN')}
-                                                                    title="Convertir a Administrador"
-                                                                >
-                                                                    {updatingUserId === user.id ? '...' : 'Admin'}
-                                                                </button>
-                                                            )}
-                                                            {user.role !== 'MEDICO' && (
-                                                                <button
-                                                                    type="button"
-                                                                    className="admin-action-btn small"
-                                                                    disabled={updatingUserId === user.id || editingUser?.id === user.id}
-                                                                    onClick={() => handleUpdateUserRole(user.id, 'MEDICO')}
-                                                                    title="Convertir a Médico"
-                                                                >
-                                                                    {updatingUserId === user.id ? '...' : 'Médico'}
-                                                                </button>
-                                                            )}
-                                                            {user.role !== 'PACIENTE' && (
-                                                                <button
-                                                                    type="button"
-                                                                    className="admin-action-btn small"
-                                                                    disabled={updatingUserId === user.id || editingUser?.id === user.id}
-                                                                    onClick={() => handleUpdateUserRole(user.id, 'PACIENTE')}
-                                                                    title="Convertir a Paciente"
-                                                                >
-                                                                    {updatingUserId === user.id ? '...' : 'Paciente'}
-                                                                </button>
-                                                            )}
-                                                            {/* Botón de activar/inactivar para cualquier usuario */}
-                                                            <button
-                                                                type="button"
-                                                                className={`admin-action-btn small ${isActive ? 'danger' : ''}`}
-                                                                disabled={togglingUserId === user.id || updatingUserId === user.id || user.id === currentUser.id}
-                                                                onClick={() => handleToggleUserStatus(user.id, isActive)}
-                                                                title={isActive ? 'Inactivar usuario' : 'Activar usuario'}
-                                                            >
-                                                                {togglingUserId === user.id ? '...' : (isActive ? 'Inactivar' : 'Activar')}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        );
-                                    })
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    {totalPages > 1 && (
-                        <div className="admin-pagination">
-                            <button
-                                type="button"
-                                className="admin-pagination-btn"
-                                onClick={() => goToPage(currentPage - 1)}
-                                disabled={currentPage === 1}
-                            >
-                                ← Anterior
-                            </button>
-                            <div className="admin-pagination-pages">
-                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
-                                    // Mostrar primera página, última, página actual y páginas adyacentes
-                                    if (
-                                        page === 1 ||
-                                        page === totalPages ||
-                                        (page >= currentPage - 1 && page <= currentPage + 1)
-                                    ) {
-                                        return (
-                                            <button
-                                                key={page}
-                                                type="button"
-                                                className={`admin-pagination-page ${currentPage === page ? 'active' : ''}`}
-                                                onClick={() => goToPage(page)}
-                                            >
-                                                {page}
-                                            </button>
-                                        );
-                                    } else if (page === currentPage - 2 || page === currentPage + 2) {
-                                        return <span key={page} className="admin-pagination-ellipsis">...</span>;
-                                    }
-                                    return null;
-                                })}
-                            </div>
-                            <button
-                                type="button"
-                                className="admin-pagination-btn"
-                                onClick={() => goToPage(currentPage + 1)}
-                                disabled={currentPage === totalPages}
-                            >
-                                Siguiente →
-                            </button>
-                        </div>
-                    )}
-                </div>
-
-                {editingUser && (
-                    <div className="admin-modal-overlay" onClick={cancelEditUser}>
-                        <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
-                            <div className="admin-modal-header">
-                                <h3>Modificar datos de usuario</h3>
-                                <button
-                                    type="button"
-                                    className="admin-modal-close"
-                                    onClick={cancelEditUser}
-                                >
-                                    ×
-                                </button>
-                            </div>
-                            <form onSubmit={handleUpdateUser} className="admin-form">
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <input
-                                        type="text"
-                                        placeholder="Nombre *"
-                                        value={editUserForm.nombre}
-                                        onChange={(e) => setEditUserForm({ ...editUserForm, nombre: e.target.value })}
-                                        required
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="Apellido"
-                                        value={editUserForm.apellido}
-                                        onChange={(e) => setEditUserForm({ ...editUserForm, apellido: e.target.value })}
-                                    />
-                                </div>
-                                <input
-                                    type="email"
-                                    placeholder="Email *"
-                                    value={editUserForm.email}
-                                    onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })}
-                                    required
-                                />
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                                    <input
-                                        type="password"
-                                        placeholder="Nueva contraseña (dejar vacío para no cambiar)"
-                                        value={editUserForm.password}
-                                        onChange={(e) => setEditUserForm({ ...editUserForm, password: e.target.value })}
-                                        minLength={8}
-                                    />
-                                    <input
-                                        type="text"
-                                        placeholder="DNI"
-                                        value={editUserForm.dni}
-                                        onChange={(e) => setEditUserForm({ ...editUserForm, dni: e.target.value })}
-                                    />
-                                </div>
-                                <div className="admin-form-actions">
-                                    <button
-                                        type="button"
-                                        className="admin-secondary-btn"
-                                        onClick={cancelEditUser}
-                                    >
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        className="submit-btn"
-                                        disabled={updatingUserId === editingUser.id}
-                                    >
-                                        {updatingUserId === editingUser.id ? 'Guardando...' : 'Guardar cambios'}
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                )}
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Fecha y Hora</th>
+                            <th>Paciente</th>
+                            <th>Médico</th>
+                            <th>Especialidad</th>
+                            <th>Estado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {adminAppointments.length > 0 ? adminAppointments.map((apt) => (
+                            <tr key={apt.id}>
+                                <td>{new Date(apt.date).toLocaleDateString('es-ES')} - {apt.time}</td>
+                                <td>{apt.patient_name} <br/><small>{apt.patient_email}</small></td>
+                                <td>{apt.doctor_name}</td>
+                                <td>{apt.specialty_name}</td>
+                                <td>
+                                    <span className={`status ${(apt.status || 'Pendiente').toLowerCase()}`}>
+                                        {apt.status || 'Pendiente'}
+                                    </span>
+                                </td>
+                            </tr>
+                        )) : (
+                            <tr>
+                                <td colSpan="5" style={{ textAlign: 'center', padding: '20px' }}>No se encontraron turnos con los filtros seleccionados.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
             </div>
         );
     }
@@ -884,6 +679,7 @@ export default function AdminDashboard() {
                 {activeTab === 'specialties' && renderSpecialties()}
                 {activeTab === 'doctors' && renderDoctors()}
                 {activeTab === 'users' && renderUsers()}
+                {activeTab === 'appointments' && renderAppointments()} {/* <--- [NUEVO] */}
             </section>
         </div>
     );

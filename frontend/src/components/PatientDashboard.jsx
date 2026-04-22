@@ -19,6 +19,10 @@ export default function PatientDashboard() {
     time: ''
   });
 
+  // Estados para reprogramar turno
+  const [reschedulingId, setReschedulingId] = useState(null);
+  const [rescheduleData, setRescheduleData] = useState({ date: '', time: '' });
+
   useEffect(() => {
     loadData();
   }, []);
@@ -107,6 +111,32 @@ export default function PatientDashboard() {
       loadData();
     } catch (err) {
       setError(err.message);
+    }
+  };
+
+  const submitReschedule = async (e, appointmentId) => {
+    e.preventDefault();
+    if (!rescheduleData.date || !rescheduleData.time) {
+      alert('Debes seleccionar nueva fecha y hora.');
+      return;
+    }
+
+    try {
+      await api(`/appointments/${appointmentId}/reschedule`, {
+        method: 'PUT',
+        body: {
+          date: rescheduleData.date,
+          time: rescheduleData.time
+        },
+        token: localStorage.getItem('token')
+      });
+      
+      setReschedulingId(null);
+      setRescheduleData({ date: '', time: '' });
+      loadData();
+      alert('Turno reprogramado exitosamente');
+    } catch (err) {
+      alert(`No se pudo reprogramar: ${err.message}`);
     }
   };
 
@@ -229,24 +259,85 @@ export default function PatientDashboard() {
                     <div className="appointment-info">
                       <h4>{appointment.doctor_name || 'Dr. García'}</h4>
                       <p className="specialty">{appointment.specialty_name || 'Clínica Médica'}</p>
-                      <p className="date">{formatDate(appointment.date)}</p>
-                      <p className="time">{formatTime(appointment.time)}</p>
-                      {isInactive && <span className="inactive-tag">Cuenta inactiva</span>}
-                      <span className={`status ${(isInactive ? 'Cancelado' : (appointment.status || 'Pendiente')).toLowerCase()}`}>
-                        {isInactive ? 'Cancelado' : (appointment.status || 'Pendiente')}
-                      </span>
-                      {!isInactive && appointment.status === 'Cancelado' && appointment.cancel_reason && (
-                        <p className="cancel-reason">Motivo: {appointment.cancel_reason}</p>
+                      
+                      {/* ==== MODO REPROGRAMACIÓN ==== */}
+                      {reschedulingId === appointment.id ? (
+                        <form onSubmit={(e) => submitReschedule(e, appointment.id)} className="reschedule-form" style={{marginTop: '10px'}}>
+                          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
+                            <input 
+                              type="date"
+                              value={rescheduleData.date}
+                              min={new Date().toLocaleDateString('en-CA')}
+                              onChange={(e) => setRescheduleData({...rescheduleData, date: e.target.value})}
+                              required
+                            />
+                            <select 
+                              value={rescheduleData.time}
+                              onChange={(e) => setRescheduleData({...rescheduleData, time: e.target.value})}
+                              required
+                            >
+                              <option value="">Hora</option>
+                              <option value="09:00">09:00</option>
+                              <option value="09:30">09:30</option>
+                              <option value="10:00">10:00</option>
+                              <option value="10:30">10:30</option>
+                              <option value="11:00">11:00</option>
+                              <option value="11:30">11:30</option>
+                              <option value="14:00">14:00</option>
+                              <option value="14:30">14:30</option>
+                              <option value="15:00">15:00</option>
+                              <option value="15:30">15:30</option>
+                              <option value="16:00">16:00</option>
+                              <option value="16:30">16:30</option>
+                            </select>
+                          </div>
+                          <div style={{ display: 'flex', gap: '10px' }}>
+                            <button type="submit" className="action-btn primary" style={{padding: '5px 10px'}}>Guardar</button>
+                            <button type="button" className="cancel-btn" style={{padding: '5px 10px'}} onClick={() => setReschedulingId(null)}>Descartar</button>
+                          </div>
+                        </form>
+                      ) : (
+                        /* ==== MODO VISTA NORMAL ==== */
+                        <>
+                          <p className="date">{formatDate(appointment.date)}</p>
+                          <p className="time">{formatTime(appointment.time)}</p>
+                          {isInactive && <span className="inactive-tag">Cuenta inactiva</span>}
+                          <span className={`status ${(isInactive ? 'Cancelado' : (appointment.status || 'Pendiente')).toLowerCase()}`}>
+                            {isInactive ? 'Cancelado' : (appointment.status || 'Pendiente')}
+                          </span>
+                          {!isInactive && appointment.status === 'Cancelado' && appointment.cancel_reason && (
+                            <p className="cancel-reason">Motivo: {appointment.cancel_reason}</p>
+                          )}
+                        </>
                       )}
                     </div>
+
                     <div className="appointment-actions">
-                      {!isInactive && appointment.status !== 'Cancelado' && (
-                        <button 
-                          className="cancel-btn"
-                          onClick={() => handleCancelAppointment(appointment.id)}
-                        >
-                          Cancelar
-                        </button>
+                      {!isInactive && appointment.status !== 'Cancelado' && appointment.status !== 'Atendido' && (
+                        <>
+                          {reschedulingId !== appointment.id && (
+                            <button 
+                              className="action-btn secondary"
+                              style={{ marginRight: '10px' }}
+                              onClick={() => {
+                                setReschedulingId(appointment.id);
+                                // Pre-cargar la fecha y hora original (asumiendo que formatTime devuelve HH:mm)
+                                setRescheduleData({
+                                  date: appointment.date.split('T')[0], 
+                                  time: appointment.time.substring(0, 5)
+                                });
+                              }}
+                            >
+                              Reprogramar
+                            </button>
+                          )}
+                          <button 
+                            className="cancel-btn"
+                            onClick={() => handleCancelAppointment(appointment.id)}
+                          >
+                            Cancelar
+                          </button>
+                        </>
                       )}
                     </div>
                   </div>

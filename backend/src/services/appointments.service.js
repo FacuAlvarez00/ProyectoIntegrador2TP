@@ -135,12 +135,14 @@ export async function createAppointment({ patientId, doctorId, specialtyId, date
                 'Pendiente'
               ) AS estado
        FROM turnos t
-       WHERE t.id_doctor = ? AND t.fecha_turno = ?
+       WHERE t.id_doctor = ? 
+         AND t.fecha_turno > DATE_SUB(?, INTERVAL 30 MINUTE)
+         AND t.fecha_turno < DATE_ADD(?, INTERVAL 30 MINUTE)
        LIMIT 1`,
-      [doctorId, fechaTurno]
+      [doctorId, fechaTurno, fechaTurno]
     );
     if (conflictRows.length && conflictRows[0].estado !== 'Cancelado') {
-      throw new BadRequest('El turno ya está reservado');
+      throw new BadRequest('El turno ya está reservado o interfiere con un turno ocupado en el mismo rango de horario.');
     }
 
     const [res] = await conn.query(
@@ -267,6 +269,134 @@ export async function listByDoctor(doctorId) {
   return rows.map(row => ({
     ...row,
     patient_name: row.patient_name.trim()
+  }));
+}
+
+export async function updateAppointment(appointmentId, userId, role, { date, time }) {
+  if (!date || !time) throw new BadRequest('Datos incompletos para reprogramar el turno');
+  
+  const normalizedDate = normalizeDate(date);
+  const normalizedTime = normalizeTime(time);
+  const nuevaFechaTurno = `${normalizedDate} ${normalizedTime}:00`;
+
+  const pool = await getPool();
+  const conn = await pool.getConnection();
+
+  try {
+    await conn.beginTransaction();
+
+    const [rows] = await conn.query(
+      `SELECT t.id, t.id_doctor, t.id_paciente,
+              COALESCE(
+                (
+                  SELECT est.valor
+                  FROM turnos_estado te
+                  JOIN estados est ON est.id = te.id_estado
+                  WHERE te.id_turno = t.id
+                  ORDER BY te.fecha DESC, te.id DESC
+                  LIMIT 1
+                ), 'Pendiente'
+              ) AS estado
+       FROM turnos t
+       WHERE t.id = ? FOR UPDATE`,
+      [appointmentId]
+    );
+
+    if (!rows.length) throw new BadRequest('Turno no encontrado');
+    const turno = rows[0];
+
+    // Validar pertenencia si no es ADMIN
+    if (role === 'PACIENTE' && turno.id_paciente !== userId) {
+      throw new BadRequest('El turno no pertenece al paciente');
+    }
+    if (turno.estado === 'Cancelado' || turno.estado === 'Atendido') {
+      throw new BadRequest('No se puede reprogramar un turno ya cancelado o atendido');
+    }
+
+    // Verificar si no hay solapamiento (Misma lógica que al crear)
+    const [conflictRows] = await conn.query(
+      `SELECT t.id,
+              COALESCE(
+                (
+                   SELECT est.valor FROM turnos_estado te
+                   JOIN estados est ON est.id = te.id_estado
+                   WHERE te.id_turno = t.id
+                   ORDER BY te.fecha DESC, te.id DESC
+                   LIMIT 1
+                ), 'Pendiente'
+              ) AS estado
+       FROM turnos t
+       WHERE t.id_doctor = ?
+         AND t.id != ?
+         AND t.fecha_turno > DATE_SUB(?, INTERVAL 30 MINUTE)
+         AND t.fecha_turno < DATE_ADD(?, INTERVAL 30 MINUTE)
+       LIMIT 1`,
+      [turno.id_doctor, appointmentId, nuevaFechaTurno, nuevaFechaTurno]
+    );
+
+    if (conflictRows.length && conflictRows[0].estado !== 'Cancelado') {
+      throw new BadRequest('El nuevo horario interfiere con otro turno asignado en la agenda.');
+    }
+
+    await conn.query(`UPDATE turnos SET fecha_turno = ? WHERE id = ?`, [nuevaFechaTurno, appointmentId]);
+
+    await conn.commit();
+    return { ok: true, message: 'Turno reprogramado exitosamente' };
+  } catch (err) {
+    await conn.rollback();
+    throw err;
+  } finally {
+    conn.release();
+  }
+}
+
+export async function listAll(filters = {}) {
+  const pool = await getPool();
+  
+  let baseQuery = `
+    SELECT
+      t.id,
+      DATE(t.fecha_turno) AS date,
+      DATE_FORMAT(t.fecha_turno, '%H:%i') AS time,
+      CONCAT(doc.nombre, ' ', IFNULL(doc.apellido, '')) AS doctor_name,
+      CONCAT(pac.nombre, ' ', IFNULL(pac.apellido, '')) AS patient_name,
+      pac.email AS patient_email,
+      esp.nombre AS specialty_name,
+      COALESCE(
+        (SELECT est.valor FROM turnos_estado te JOIN estados est ON est.id = te.id_estado WHERE te.id_turno = t.id ORDER BY te.fecha DESC, te.id DESC LIMIT 1),
+        'Pendiente'
+      ) AS status
+    FROM turnos t
+    JOIN usuarios pac ON pac.id = t.id_paciente
+    JOIN usuarios doc ON doc.id = t.id_doctor
+    JOIN especialidades esp ON esp.id = t.id_especialidad
+    WHERE 1=1
+  `;
+  
+  const queryParams = [];
+  if (filters.doctorId) {
+      baseQuery += ` AND t.id_doctor = ?`;
+      queryParams.push(filters.doctorId);
+  }
+  if (filters.date) {
+      baseQuery += ` AND DATE(t.fecha_turno) = ?`;
+      queryParams.push(filters.date);
+  }
+
+  let finalQuery = `SELECT * FROM (${baseQuery}) AS sub`;
+  
+  if (filters.status) {
+      finalQuery += ` WHERE status = ?`;
+      queryParams.push(filters.status);
+  }
+  
+  finalQuery += ` ORDER BY date DESC, time DESC`;
+  
+  const [rows] = await pool.query(finalQuery, queryParams);
+  return rows.map(r => ({ 
+      ...r, 
+      doctor_name: r.doctor_name.trim(), 
+      patient_name: r.patient_name.trim() 
   }));
 }
 

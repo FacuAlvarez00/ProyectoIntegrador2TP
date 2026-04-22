@@ -31,6 +31,8 @@ CREATE TABLE usuarios (
   email_verificado  BOOLEAN NOT NULL DEFAULT 0,
   activo            BOOLEAN NOT NULL DEFAULT 1,
   creado            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  intentos_fallidos INT NOT NULL DEFAULT 0,
+  bloqueado_hasta   TIMESTAMP NULL,
   INDEX idx_usuarios_email (email),
   INDEX idx_usuarios_dni (dni)
 ) ENGINE=InnoDB;
