@@ -33,6 +33,7 @@ CREATE TABLE usuarios (
   creado            TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   intentos_fallidos INT NOT NULL DEFAULT 0,
   bloqueado_hasta   TIMESTAMP NULL,
+  telefono          VARCHAR(20) NULL,
   INDEX idx_usuarios_email (email),
   INDEX idx_usuarios_dni (dni)
 ) ENGINE=InnoDB;
@@ -287,6 +288,11 @@ ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(
 INSERT INTO doctores (id_usuario, numero_licencia, bio)
 SELECT id, 'DERM-3004', 'Dermatologia quirurgica y lesiones pigmentadas'
 FROM usuarios WHERE email = 'federico.basile@derma.local'
+ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
+
+INSERT INTO doctores (id_usuario, numero_licencia, bio)
+SELECT id, 'DERM-3005', 'Dermatologa con enfoque en dermatitis y alergias'
+FROM usuarios WHERE email = 'romina.puccio@derma.local'
 ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio);
 
 -- Relaciones doctores-especialidades

@@ -2,8 +2,8 @@ import * as service from '../services/auth.service.js';
 
 export async function register(req, res, next) {
   try {
-    const { nombre, apellido, email, password, role = 'PACIENTE', dni } = req.body;
-    const data = await service.register({ nombre, apellido, email, password, role, dni });
+    const { nombre, apellido, email, password, role = 'PACIENTE', dni, telefono } = req.body;
+    const data = await service.register({ nombre, apellido, email, password, role, dni, telefono });
     res.status(201).json(data);
   } catch (e) { next(e); }
 }

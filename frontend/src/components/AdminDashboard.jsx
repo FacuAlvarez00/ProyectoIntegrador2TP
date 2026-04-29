@@ -565,6 +565,162 @@ export default function AdminDashboard() {
         }
     }
 
+    function renderUsers() {
+        const roleLabels = { ADMIN: 'Administrador', MEDICO: 'Médico', PACIENTE: 'Paciente' };
+
+        const filteredUsers = users.filter(u => userRoleFilter === 'ALL' || u.role === userRoleFilter);
+        const totalPages = Math.ceil(filteredUsers.length / usersPerPage);
+        const startIndex = (currentPage - 1) * usersPerPage;
+        const paginatedUsers = filteredUsers.slice(startIndex, startIndex + usersPerPage);
+
+        const goToPage = (page) => {
+            if (page >= 1 && page <= totalPages) setCurrentPage(page);
+        };
+
+        return (
+            <div className="admin-users">
+                <div className="admin-form-card">
+                    <h3>Crear nuevo administrador</h3>
+                    <form onSubmit={handleCreateAdmin} className="admin-form">
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <input type="text" placeholder="Nombre *" value={newAdmin.nombre} onChange={(e) => setNewAdmin({ ...newAdmin, nombre: e.target.value })} required />
+                            <input type="text" placeholder="Apellido" value={newAdmin.apellido} onChange={(e) => setNewAdmin({ ...newAdmin, apellido: e.target.value })} />
+                        </div>
+                        <input type="email" placeholder="Email *" value={newAdmin.email} onChange={(e) => setNewAdmin({ ...newAdmin, email: e.target.value })} required />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                            <input type="password" placeholder="Contraseña * (mín. 8 caracteres)" value={newAdmin.password} onChange={(e) => setNewAdmin({ ...newAdmin, password: e.target.value })} required minLength={8} />
+                            <input type="text" placeholder="DNI (opcional)" value={newAdmin.dni} onChange={(e) => setNewAdmin({ ...newAdmin, dni: e.target.value })} />
+                        </div>
+                        <div className="admin-form-actions">
+                            <button type="submit" className="submit-btn">Crear administrador</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div className="admin-table-card">
+                    <div className="admin-table-header">
+                        <h3>Usuarios registrados</h3>
+                        <span>Mostrando {paginatedUsers.length > 0 ? startIndex + 1 : 0}–{Math.min(startIndex + usersPerPage, filteredUsers.length)} de {filteredUsers.length} usuarios</span>
+                    </div>
+                    <div className="admin-doctor-filters">
+                        <select value={userRoleFilter} onChange={(e) => { setUserRoleFilter(e.target.value); setCurrentPage(1); }}>
+                            <option value="ALL">Todos los roles</option>
+                            <option value="ADMIN">Administradores</option>
+                            <option value="MEDICO">Médicos</option>
+                            <option value="PACIENTE">Pacientes</option>
+                        </select>
+                    </div>
+                    <div className="admin-table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Email</th>
+                                    <th>DNI</th>
+                                    <th>Rol actual</th>
+                                    <th>Fecha registro</th>
+                                    <th style={{ textAlign: 'right', minWidth: '300px' }}>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {paginatedUsers.length === 0 ? (
+                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px' }}>No hay usuarios para mostrar</td></tr>
+                                ) : paginatedUsers.map(user => {
+                                    const isActive = user.activo !== null && user.activo !== undefined ? user.activo : true;
+                                    return (
+                                        <tr key={user.id}>
+                                            <td>{user.name}</td>
+                                            <td>{user.email}</td>
+                                            <td>{user.dni || '—'}</td>
+                                            <td>
+                                                <span className={`admin-status-badge ${user.role === 'ADMIN' ? 'active' : user.role === 'MEDICO' ? '' : 'inactive'}`}>
+                                                    {roleLabels[user.role] || user.role}
+                                                </span>
+                                            </td>
+                                            <td>{user.creado ? new Date(user.creado).toLocaleDateString('es-ES') : '—'}</td>
+                                            <td className="actions">
+                                                <div className="admin-actions-group">
+                                                    <button type="button" className="admin-action-btn primary" disabled={updatingUserId === user.id || editingUser?.id === user.id} onClick={() => startEditUser(user)}>
+                                                        Modificar
+                                                    </button>
+                                                    <div className="admin-role-buttons">
+                                                        {user.role !== 'ADMIN' && (
+                                                            <button type="button" className="admin-action-btn small" disabled={updatingUserId === user.id} onClick={() => handleUpdateUserRole(user.id, 'ADMIN')} title="Convertir a Administrador">
+                                                                {updatingUserId === user.id ? '...' : 'Admin'}
+                                                            </button>
+                                                        )}
+                                                        {user.role !== 'MEDICO' && (
+                                                            <button type="button" className="admin-action-btn small" disabled={updatingUserId === user.id} onClick={() => handleUpdateUserRole(user.id, 'MEDICO')} title="Convertir a Médico">
+                                                                {updatingUserId === user.id ? '...' : 'Médico'}
+                                                            </button>
+                                                        )}
+                                                        {user.role !== 'PACIENTE' && (
+                                                            <button type="button" className="admin-action-btn small" disabled={updatingUserId === user.id} onClick={() => handleUpdateUserRole(user.id, 'PACIENTE')} title="Convertir a Paciente">
+                                                                {updatingUserId === user.id ? '...' : 'Paciente'}
+                                                            </button>
+                                                        )}
+                                                        <button type="button" className={`admin-action-btn small ${isActive ? 'danger' : ''}`} disabled={togglingUserId === user.id || updatingUserId === user.id || user.id === currentUser.id} onClick={() => handleToggleUserStatus(user.id, isActive)} title={isActive ? 'Inactivar usuario' : 'Activar usuario'}>
+                                                            {togglingUserId === user.id ? '...' : (isActive ? 'Inactivar' : 'Activar')}
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {totalPages > 1 && (
+                        <div className="admin-pagination">
+                            <button type="button" className="admin-pagination-btn" onClick={() => goToPage(currentPage - 1)} disabled={currentPage === 1}>← Anterior</button>
+                            <div className="admin-pagination-pages">
+                                {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => {
+                                    if (page === 1 || page === totalPages || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                                        return <button key={page} type="button" className={`admin-pagination-page ${currentPage === page ? 'active' : ''}`} onClick={() => goToPage(page)}>{page}</button>;
+                                    } else if (page === currentPage - 2 || page === currentPage + 2) {
+                                        return <span key={page} className="admin-pagination-ellipsis">...</span>;
+                                    }
+                                    return null;
+                                })}
+                            </div>
+                            <button type="button" className="admin-pagination-btn" onClick={() => goToPage(currentPage + 1)} disabled={currentPage === totalPages}>Siguiente →</button>
+                        </div>
+                    )}
+                </div>
+
+                {editingUser && (
+                    <div className="admin-modal-overlay" onClick={cancelEditUser}>
+                        <div className="admin-modal" onClick={(e) => e.stopPropagation()}>
+                            <div className="admin-modal-header">
+                                <h3>Modificar datos de usuario</h3>
+                                <button type="button" className="admin-modal-close" onClick={cancelEditUser}>×</button>
+                            </div>
+                            <form onSubmit={handleUpdateUser} className="admin-form">
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <input type="text" placeholder="Nombre *" value={editUserForm.nombre} onChange={(e) => setEditUserForm({ ...editUserForm, nombre: e.target.value })} required />
+                                    <input type="text" placeholder="Apellido" value={editUserForm.apellido} onChange={(e) => setEditUserForm({ ...editUserForm, apellido: e.target.value })} />
+                                </div>
+                                <input type="email" placeholder="Email *" value={editUserForm.email} onChange={(e) => setEditUserForm({ ...editUserForm, email: e.target.value })} required />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                                    <input type="password" placeholder="Nueva contraseña (dejar vacío para no cambiar)" value={editUserForm.password} onChange={(e) => setEditUserForm({ ...editUserForm, password: e.target.value })} minLength={8} />
+                                    <input type="text" placeholder="DNI" value={editUserForm.dni} onChange={(e) => setEditUserForm({ ...editUserForm, dni: e.target.value })} />
+                                </div>
+                                <div className="admin-form-actions">
+                                    <button type="button" className="admin-secondary-btn" onClick={cancelEditUser}>Cancelar</button>
+                                    <button type="submit" className="submit-btn" disabled={updatingUserId === editingUser.id}>
+                                        {updatingUserId === editingUser.id ? 'Guardando...' : 'Guardar cambios'}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     // --- [NUEVO] FUNCIÓN DE RENDERIZADO DE LA TABLA DE TURNOS ---
     function renderAppointments() {
         return (

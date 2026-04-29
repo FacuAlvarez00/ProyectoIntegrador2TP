@@ -6,7 +6,7 @@ import { sendMail } from '../utils/mailer.js';
 import crypto from 'crypto';
 import { ENV } from '../config/env.js';
 
-export async function register({ nombre, apellido = '', email, password, role, dni }) {
+export async function register({ nombre, apellido = '', email, password, role, dni, telefono }) {
     if (!nombre || !email || !password) throw new BadRequest('Datos incompletos');
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) throw new BadRequest('Email inválido');
     if (!isStrong(password)) throw new BadRequest('Contraseña débil');
@@ -23,9 +23,9 @@ export async function register({ nombre, apellido = '', email, password, role, d
 
         const hash = await bcrypt.hash(password, 10);
         const [result] = await conn.query(
-            `INSERT INTO usuarios (nombre, apellido, email, hash_contrasena, rol, dni, email_verificado, activo)
-       VALUES (?,?,?,?,?,?,0,1)`,
-            [nombre, apellido, email, hash, role, dni || null]
+            `INSERT INTO usuarios (nombre, apellido, email, hash_contrasena, rol, dni, telefono, email_verificado, activo)
+       VALUES (?,?,?,?,?,?,?,0,1)`,
+            [nombre, apellido, email, hash, role, dni || null, telefono || null]
         );
         const userId = result.insertId;
 

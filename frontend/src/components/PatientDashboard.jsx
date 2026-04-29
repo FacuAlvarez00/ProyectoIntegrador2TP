@@ -396,31 +396,28 @@ export default function PatientDashboard() {
               <div className="form-row">
                 <div className="form-group">
                   <label>Fecha</label>
-                  <input 
+                  <input
                     type="date"
                     value={newAppointment.date}
                     onChange={(e) => setNewAppointment({
                       ...newAppointment,
                       date: e.target.value
                     })}
-                    min="2025-10-01"
+                    min={new Date().toLocaleDateString('en-CA')}
+                    onClick={(e) => { try { e.target.showPicker(); } catch {} }}
                     onKeyDown={(e) => {
-                      // Permitir solo teclas de navegación y el calendario
                       if (e.key !== 'Tab' && e.key !== 'Enter' && e.key !== 'Escape') {
                         e.preventDefault();
                       }
                     }}
                     onPaste={(e) => e.preventDefault()}
                     onInput={(e) => {
-                      // Validar que la fecha sea válida y esté en el rango permitido
                       const selectedDate = new Date(e.target.value);
-                      const minDate = new Date('2025-10-01');
-                      if (selectedDate < minDate) {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      if (selectedDate < today) {
                         e.target.value = '';
-                        setNewAppointment({
-                          ...newAppointment,
-                          date: ''
-                        });
+                        setNewAppointment({ ...newAppointment, date: '' });
                       }
                     }}
                     required
