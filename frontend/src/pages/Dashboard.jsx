@@ -2,6 +2,7 @@ import React from 'react';
 import PatientDashboard from '../components/PatientDashboard.jsx';
 import AdminDashboard from '../components/AdminDashboard.jsx';
 import DoctorDashboard from '../components/DoctorDashboard.jsx';
+import SecretaryDashboard from '../components/SecretaryDashboard.jsx';
 
 export default function Dashboard(){
   // El usuario ya está validado por ProtectedRoute
@@ -17,6 +18,10 @@ export default function Dashboard(){
   }
   if (user.role === 'MEDICO') {
     return <DoctorDashboard />;
+  }
+
+  if (user.role === 'SECRETARIO') {
+    return <SecretaryDashboard />;
   }
 
   // Dashboard básico para otros roles (por ahora)

@@ -72,8 +72,14 @@ export async function cancelByDoctor(req, res, next) {
 
 export async function listAllForAdmin(req, res, next) {
   try {
-    const { status, doctor_id, date } = req.query;
-    const data = await svc.listAll({ status, doctorId: doctor_id ? Number(doctor_id) : null, date });
+    const { status, doctor_id, date, start_date, end_date } = req.query; // Captura de nuevos queries
+    const data = await svc.listAll({ 
+      status, 
+      doctorId: doctor_id ? Number(doctor_id) : null, 
+      date, 
+      startDate: start_date, 
+      endDate: end_date 
+    });
     res.json(data);
   } catch (err) {
     next(err);

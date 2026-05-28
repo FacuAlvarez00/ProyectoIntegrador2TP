@@ -7,7 +7,8 @@ const tabs = [
     { id: 'specialties', label: 'Especialidades' },
     { id: 'doctors', label: 'Médicos' },
     { id: 'users', label: 'Usuarios' },
-    { id: 'appointments', label: 'Turnos' } // <--- [NUEVO] Tab de Turnos
+    { id: 'appointments', label: 'Turnos' },
+    { id: 'reports', label: 'Productividad' }
 ];
 
 function toTitleCase(str = '') {
@@ -801,6 +802,186 @@ export default function AdminDashboard() {
         );
     }
 
+    // --- ESTADOS PARA REPORTES (HU-IN20) ---
+    const [reportFilters, setReportFilters] = useState({ startDate: '', endDate: '' });
+    const [reportData, setReportData] = useState([]);
+    const [reportGenerated, setReportGenerated] = useState(false);
+
+    async function generateReport() {
+        if (!reportFilters.startDate || !reportFilters.endDate) {
+            setError('Seleccioná un rango de fechas de Inicio y Fin.');
+            return;
+        }
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            params.append('start_date', reportFilters.startDate);
+            params.append('end_date', reportFilters.endDate);
+            
+            const data = await api(`/appointments/all?${params.toString()}`, { token });
+            setReportData(data || []);
+            setReportGenerated(true);
+        } catch (err) {
+            setError('Error al generar informe: ' + err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
+    function renderReports() {
+        const totalTurnos = reportData.length;
+        const atendidos = reportData.filter(t => t.status === 'Atendido').length;
+        const cancelados = reportData.filter(t => t.status === 'Cancelado').length;
+        const confirmados = reportData.filter(t => t.status === 'Confirmado').length;
+        const pendientes = reportData.filter(t => t.status === 'Pendiente').length;
+        
+        let ausentismo = 0;
+        if (totalTurnos > 0) {
+            // Se calcula como todo lo cancelado/ausente.
+            ausentismo = ((cancelados / totalTurnos) * 100).toFixed(1);
+        }
+
+        const metricsByDoctor = {};
+        reportData.forEach(t => {
+            if (!metricsByDoctor[t.doctor_name]) metricsByDoctor[t.doctor_name] = { total: 0, atendidos: 0, cancelados: 0 };
+            metricsByDoctor[t.doctor_name].total += 1;
+            if (t.status === 'Atendido') metricsByDoctor[t.doctor_name].atendidos += 1;
+            if (t.status === 'Cancelado') metricsByDoctor[t.doctor_name].cancelados += 1;
+        });
+
+        // Configuración Gráfico de Torta por CSS sin librerias
+        let conicGradient = '';
+        if (totalTurnos > 0) {
+            let current = 0;
+            const parts = [];
+            const colores = [
+                { val: (atendidos / totalTurnos) * 100, color: '#4caf50' },
+                { val: (cancelados / totalTurnos) * 100, color: '#f44336' },
+                { val: (confirmados / totalTurnos) * 100, color: '#2196f3' },
+                { val: (pendientes / totalTurnos) * 100, color: '#ff9800' }
+            ];
+            
+            for(let c of colores) {
+                if (c.val > 0) {
+                    parts.push(`${c.color} ${current}% ${current + c.val}%`);
+                    current += c.val;
+                }
+            }
+            conicGradient = parts.join(', ');
+        }
+
+        return (
+            <div className="admin-table-card">
+                {/* Estilos para que funcione la Exportación Nativa PDF con Control-P o Botón */}
+                <style>
+                    {`
+                    @media print {
+                        body * { visibility: hidden; }
+                        .print-report-area, .print-report-area * { visibility: visible; }
+                        .print-report-area { position: absolute; left: 0; top: 0; width: 100%; margin: 0; padding: 20px; }
+                        .hide-on-print { display: none !important; }
+                        .admin-dashboard, .admin-sidebar, nav, header { display: none !important; }
+                    }
+                    `}
+                </style>
+                
+                <div className="admin-table-header hide-on-print">
+                    <h3>Informe de Productividad (Director Médico)</h3>
+                    <span>Seleccione un rango para generar KPIs</span>
+                </div>
+                
+                <div className="admin-doctor-filters hide-on-print" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
+                    <div style={{display:'flex', flexDirection:'column'}}>
+                       <label style={{fontSize:'12px', color:'#777'}}>Fecha Inicio</label>
+                       <input type="date" value={reportFilters.startDate} onChange={e => setReportFilters({...reportFilters, startDate: e.target.value})} style={{padding: '8px'}} />
+                    </div>
+                    <div style={{display:'flex', flexDirection:'column'}}>
+                       <label style={{fontSize:'12px', color:'#777'}}>Fecha Fin</label>
+                       <input type="date" value={reportFilters.endDate} onChange={e => setReportFilters({...reportFilters, endDate: e.target.value})} style={{padding: '8px'}} />
+                    </div>
+                    <button className="submit-btn" style={{alignSelf: 'flex-end', height:'35px'}} onClick={generateReport} disabled={loading}>
+                        {loading ? 'Generando...' : 'Generar Informe'}
+                    </button>
+                    {reportGenerated && (
+                        <button className="admin-secondary-btn" style={{alignSelf: 'flex-end', height:'35px'}} onClick={() => window.print()}>
+                            📄 Exportar a PDF
+                        </button>
+                    )}
+                </div>
+
+                {reportGenerated && (
+                    <div className="print-report-area" style={{ background: '#fff', borderRadius: '8px' }}>
+                        <div style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginBottom: '20px' }}>
+                           <h2 style={{ textAlign: 'center', margin: 0 }}>Reporte de Productividad y Desempeño</h2>
+                           <p style={{ textAlign: 'center', color: '#666', marginTop: '5px' }}>Período evaluado: {new Date(reportFilters.startDate + 'T00:00:00').toLocaleDateString()} al {new Date(reportFilters.endDate + 'T00:00:00').toLocaleDateString()}</p>
+                           <p style={{ textAlign: 'center', color: '#aaa', fontSize: '12px' }}>Metadatos de Exportación - Generado el: {new Date().toLocaleString()}</p>
+                        </div>
+                        
+                        <div className="admin-stats-grid" style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '30px' }}>
+                            <div className="admin-stat-card" style={{ flex: '1', textAlign: 'center', background: '#f8f9fa', padding: '15px' }}>
+                                <span className="label" style={{display:'block'}}>Total de Turnos Procesados</span>
+                                <strong style={{fontSize:'24px', color:'#333'}}>{totalTurnos}</strong>
+                            </div>
+                            <div className="admin-stat-card" style={{ flex: '1', textAlign: 'center', background: '#f8f9fa', padding: '15px' }}>
+                                <span className="label" style={{display:'block'}}>Tasa Global de Ausentismo</span>
+                                <strong style={{fontSize:'24px', color:'#f44336'}}>{ausentismo}%</strong>
+                            </div>
+                        </div>
+
+                        {totalTurnos > 0 ? (
+                            <>
+                                <h3 style={{ borderBottom: '1px solid #ddd', paddingBottom: '5px' }}>Distribución General por Estado</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '40px', marginTop: '20px' }}>
+                                    <div style={{ width: '180px', height: '180px', borderRadius: '50%', background: `conic-gradient(${conicGradient})`, border: '1px solid #ccc' }}></div>
+                                    <div style={{ marginLeft: '40px', fontSize: '16px' }}>
+                                        <div style={{margin: '8px 0'}}><span style={{ display:'inline-block', width:'15px', height:'15px', background:'#4caf50', marginRight:'10px'}}></span> Atendidos: <strong>{atendidos}</strong></div>
+                                        <div style={{margin: '8px 0'}}><span style={{ display:'inline-block', width:'15px', height:'15px', background:'#f44336', marginRight:'10px'}}></span> Cancelados: <strong>{cancelados}</strong></div>
+                                        <div style={{margin: '8px 0'}}><span style={{ display:'inline-block', width:'15px', height:'15px', background:'#2196f3', marginRight:'10px'}}></span> Confirmados: <strong>{confirmados}</strong></div>
+                                        <div style={{margin: '8px 0'}}><span style={{ display:'inline-block', width:'15px', height:'15px', background:'#ff9800', marginRight:'10px'}}></span> Pendientes: <strong>{pendientes}</strong></div>
+                                    </div>
+                                </div>
+                                
+                                <h3 style={{ borderBottom: '1px solid #ddd', paddingBottom: '5px' }}>Desempeño y Productividad por Profesional</h3>
+                                <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '15px' }}>
+                                    <thead>
+                                        <tr style={{ background: '#f1f1f1' }}>
+                                            <th style={{ textAlign: 'left', padding: '10px', borderBottom: '2px solid #ccc' }}>Médico</th>
+                                            <th style={{ textAlign: 'center', padding: '10px', borderBottom: '2px solid #ccc' }}>Atendidos</th>
+                                            <th style={{ textAlign: 'center', padding: '10px', borderBottom: '2px solid #ccc' }}>Cancelados</th>
+                                            <th style={{ textAlign: 'center', padding: '10px', borderBottom: '2px solid #ccc' }}>Total Asignados</th>
+                                            <th style={{ textAlign: 'right', padding: '10px', borderBottom: '2px solid #ccc' }}>Índice Resolución</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {Object.keys(metricsByDoctor).map(docName => {
+                                            const m = metricsByDoctor[docName];
+                                            const prod = m.total > 0 ? ((m.atendidos / m.total) * 100).toFixed(1) : 0;
+                                            return (
+                                                <tr key={docName} >
+                                                    <td style={{ padding: '10px', borderBottom: '1px solid #eee' }}><strong>{docName}</strong></td>
+                                                    <td style={{ textAlign: 'center', padding: '10px', borderBottom: '1px solid #eee' }}>{m.atendidos}</td>
+                                                    <td style={{ textAlign: 'center', padding: '10px', borderBottom: '1px solid #eee', color: m.cancelados > 0 ? '#f44336' : 'inherit' }}>{m.cancelados}</td>
+                                                    <td style={{ textAlign: 'center', padding: '10px', borderBottom: '1px solid #eee' }}>{m.total}</td>
+                                                    <td style={{ textAlign: 'right', padding: '10px', borderBottom: '1px solid #eee' }}>
+                                                        <span style={{ padding: '4px 8px', borderRadius: '4px', background: prod > 70 ? '#e8f5e9' : '#ffebee', color: prod > 70 ? '#2e7d32' : '#c62828' }}>
+                                                            {prod}%
+                                                        </span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '40px', background: '#fafafa' }}>No se registraron turnos en este periodo.</div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="admin-dashboard">
             <header className="admin-dashboard-header">
@@ -835,7 +1016,8 @@ export default function AdminDashboard() {
                 {activeTab === 'specialties' && renderSpecialties()}
                 {activeTab === 'doctors' && renderDoctors()}
                 {activeTab === 'users' && renderUsers()}
-                {activeTab === 'appointments' && renderAppointments()} {/* <--- [NUEVO] */}
+                {activeTab === 'appointments' && renderAppointments()} 
+                {activeTab === 'reports' && renderReports()}
             </section>
         </div>
     );

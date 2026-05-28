@@ -13,129 +13,167 @@ const especialidadesBase = [
 
 const doctoresBase = [
   { nombre: 'Sofía', apellido: 'Paredes', email: 'sofia.paredes@cardio.local', dni: '30000001', licencia: 'CARD-1001', bio: 'Especialista en cardiología preventiva', especialidad: 'Cardiología' },
-  { nombre: 'Martín', apellido: 'Carrizo', email: 'martin.carrizo@cardio.local', dni: '30000002', licencia: 'CARD-1002', bio: 'Cardiólogo clínico con enfoque en rehabilitación', especialidad: 'Cardiología' },
-  { nombre: 'Carolina', apellido: 'Vega', email: 'carolina.vega@cardio.local', dni: '30000003', licencia: 'CARD-1003', bio: 'Cardióloga intervencionista', especialidad: 'Cardiología' },
-  { nombre: 'Lucas', apellido: 'Ferrero', email: 'lucas.ferrero@cardio.local', dni: '30000004', licencia: 'CARD-1004', bio: 'Especialista en cardiología pediátrica', especialidad: 'Cardiología' },
-  { nombre: 'Natalia', apellido: 'Mansilla', email: 'natalia.mansilla@cardio.local', dni: '30000005', licencia: 'CARD-1005', bio: 'Cardióloga con foco en arritmias', especialidad: 'Cardiología' },
+  { nombre: 'Martín', apellido: 'Carrizo', email: 'martin.carrizo@cardio.local', dni: '30000002', licencia: 'CARD-1002', bio: 'Cardiólogo clínico', especialidad: 'Cardiología' },
   { nombre: 'Diego', apellido: 'Montiel', email: 'diego.montiel@clinica.local', dni: '30000011', licencia: 'CLIN-2001', bio: 'Médico clínico generalista', especialidad: 'Clínica Médica' },
-  { nombre: 'Gabriela', apellido: 'Arce', email: 'gabriela.arce@clinica.local', dni: '30000012', licencia: 'CLIN-2002', bio: 'Clínica médica con orientación en adultos mayores', especialidad: 'Clínica Médica' },
-  { nombre: 'Ricardo', apellido: 'Funes', email: 'ricardo.funes@clinica.local', dni: '30000013', licencia: 'CLIN-2003', bio: 'Médico clínico y auditor', especialidad: 'Clínica Médica' },
-  { nombre: 'Verónica', apellido: 'Nadal', email: 'veronica.nadal@clinica.local', dni: '30000014', licencia: 'CLIN-2004', bio: 'Clínica médica con enfoque en enfermedades crónicas', especialidad: 'Clínica Médica' },
-  { nombre: 'Sebastián', apellido: 'Ledesma', email: 'sebastian.ledesma@clinica.local', dni: '30000015', licencia: 'CLIN-2005', bio: 'Clínico orientado a medicina preventiva', especialidad: 'Clínica Médica' },
-  { nombre: 'Florencia', apellido: 'Muro', email: 'florencia.muro@derma.local', dni: '30000021', licencia: 'DERM-3001', bio: 'Dermatóloga especialista en acné adulto', especialidad: 'Dermatología' },
-  { nombre: 'Adrián', apellido: 'Castillo', email: 'adrian.castillo@derma.local', dni: '30000022', licencia: 'DERM-3002', bio: 'Dermatología clínica y estética', especialidad: 'Dermatología' },
-  { nombre: 'Macarena', apellido: 'Risso', email: 'macarena.risso@derma.local', dni: '30000023', licencia: 'DERM-3003', bio: 'Dermatóloga pediátrica', especialidad: 'Dermatología' },
-  { nombre: 'Federico', apellido: 'Basile', email: 'federico.basile@derma.local', dni: '30000024', licencia: 'DERM-3004', bio: 'Dermatología quirúrgica y lesiones pigmentadas', especialidad: 'Dermatología' },
-  { nombre: 'Romina', apellido: 'Puccio', email: 'romina.puccio@derma.local', dni: '30000025', licencia: 'DERM-3005', bio: 'Dermatóloga especialista en alergias cutáneas', especialidad: 'Dermatología' },
-  { nombre: 'Mariano', apellido: 'Albornoz', email: 'mariano.albornoz@pedia.local', dni: '30000031', licencia: 'PEDS-4001', bio: 'Pediatra general con enfoque en desarrollo infantil', especialidad: 'Pediatría' },
-  { nombre: 'Soledad', apellido: 'Villar', email: 'soledad.villar@pedia.local', dni: '30000032', licencia: 'PEDS-4002', bio: 'Pediatría y nutrición infantil', especialidad: 'Pediatría' },
-  { nombre: 'Gastón', apellido: 'Arena', email: 'gaston.arena@pedia.local', dni: '30000033', licencia: 'PEDS-4003', bio: 'Pediatra con especialización en neonatología', especialidad: 'Pediatría' },
-  { nombre: 'Mariela', apellido: 'Cuffia', email: 'mariela.cuffia@pedia.local', dni: '30000034', licencia: 'PEDS-4004', bio: 'Pediatría clínica y seguimiento del crecimiento', especialidad: 'Pediatría' },
-  { nombre: 'Nicolás', apellido: 'Iglesias', email: 'nicolas.iglesias@pedia.local', dni: '30000035', licencia: 'PEDS-4005', bio: 'Pediatra orientado a enfermedades respiratorias', especialidad: 'Pediatría' }
+  { nombre: 'Gabriela', apellido: 'Arce', email: 'gabriela.arce@clinica.local', dni: '30000012', licencia: 'CLIN-2002', bio: 'Clínica médica con orientación', especialidad: 'Clínica Médica' },
+  { nombre: 'Florencia', apellido: 'Muro', email: 'florencia.muro@derma.local', dni: '30000021', licencia: 'DERM-3001', bio: 'Dermatología', especialidad: 'Dermatología' },
+  { nombre: 'Mariano', apellido: 'Albornoz', email: 'mariano.albornoz@pedia.local', dni: '30000031', licencia: 'PEDS-4001', bio: 'Pediatra general', especialidad: 'Pediatría' }
 ];
 
-export async function seedDemoData() {
-  let connection;
-  try {
-    const pool = await getPool();
-    connection = await pool.getConnection();
-    await connection.beginTransaction();
+// Espera asíncrona auxiliar
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-    const [[{ db }]] = await connection.query('SELECT DATABASE() AS db');
-    const [activoColumn] = await connection.query(
-      `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS
-       WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'pacientes' AND COLUMN_NAME = 'activo'`,
-      [db]
-    );
-    if (!activoColumn.length) {
-      await connection.query(
-        'ALTER TABLE pacientes ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1'
+export async function seedDemoData(maxRetries = 10, retryDelay = 3000) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    let connection;
+    try {
+      const pool = await getPool();
+      // Si la DB no está lista, fallará aquí lanzando ECONNREFUSED
+      connection = await pool.getConnection(); 
+      await connection.beginTransaction();
+
+      const [[{ db }]] = await connection.query('SELECT DATABASE() AS db');
+      const [activoColumn] = await connection.query(
+        `SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'pacientes' AND COLUMN_NAME = 'activo'`, [db]
       );
-    }
-    await connection.query('UPDATE pacientes SET activo = 1 WHERE activo IS NULL');
+      if (!activoColumn.length) {
+        await connection.query('ALTER TABLE pacientes ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 1');
+      }
+      await connection.query('UPDATE pacientes SET activo = 1 WHERE activo IS NULL');
 
-    await connection.query(`
-      CREATE TABLE IF NOT EXISTS turnos_cancelaciones (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        turno_id INT NOT NULL,
-        motivo TEXT,
-        actor VARCHAR(20),
-        creado TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-        CONSTRAINT fk_turnos_cancelaciones_turno
-          FOREIGN KEY (turno_id) REFERENCES turnos(id)
-          ON DELETE CASCADE
-      ) ENGINE=InnoDB
-    `);
+      await connection.query(`
+        CREATE TABLE IF NOT EXISTS turnos_cancelaciones (
+          id INT AUTO_INCREMENT PRIMARY KEY,
+          turno_id INT NOT NULL,
+          motivo TEXT,
+          actor VARCHAR(20),
+          creado TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+          CONSTRAINT fk_turnos_cancelaciones_turno FOREIGN KEY (turno_id) REFERENCES turnos(id) ON DELETE CASCADE
+        ) ENGINE=InnoDB
+      `);
 
-    for (const estado of estadosBase) {
-      await connection.query(
-        'INSERT INTO estados (valor) VALUES (?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)',
-        [estado]
-      );
-    }
-
-    for (const especialidad of especialidadesBase) {
-      await connection.query(
-        'INSERT INTO especialidades (nombre) VALUES (?) ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)',
-        [especialidad]
-      );
-    }
-
-    const nombresEspecialidades = [...new Set(doctoresBase.map(d => d.especialidad))];
-    const [especialidadRows] = await connection.query(
-      `SELECT id, nombre FROM especialidades WHERE nombre IN (?)`,
-      [nombresEspecialidades]
-    );
-    const especialidadMap = new Map(especialidadRows.map(row => [row.nombre, row.id]));
-
-    for (const doctor of doctoresBase) {
-      const especialidadId = especialidadMap.get(doctor.especialidad);
-      if (!especialidadId) continue;
-
-      const [usuarioRows] = await connection.query(
-        'SELECT id FROM usuarios WHERE email = ?',
-        [doctor.email]
-      );
-
-      let usuarioId;
-      if (usuarioRows.length) {
-        usuarioId = usuarioRows[0].id;
-        await connection.query(
-          `UPDATE usuarios
-             SET nombre = ?, apellido = ?, rol = 'MEDICO', dni = IFNULL(dni, ?)
-           WHERE id = ?`,
-          [doctor.nombre, doctor.apellido, doctor.dni, usuarioId]
-        );
-      } else {
-        const [res] = await connection.query(
-          `INSERT INTO usuarios (dni, email, hash_contrasena, nombre, apellido, rol, email_verificado)
-           VALUES (?,?,?,?,?,?,1)`,
-          [doctor.dni, doctor.email, DEFAULT_HASH, doctor.nombre, doctor.apellido, 'MEDICO']
-        );
-        usuarioId = res.insertId;
+      // Estados y Especialidades
+      for (const estado of estadosBase) {
+        await connection.query('INSERT INTO estados (valor) VALUES (?) ON DUPLICATE KEY UPDATE valor = VALUES(valor)', [estado]);
+      }
+      for (const especialidad of especialidadesBase) {
+        await connection.query('INSERT INTO especialidades (nombre) VALUES (?) ON DUPLICATE KEY UPDATE nombre = VALUES(nombre)', [especialidad]);
       }
 
-      await connection.query(
-        `INSERT INTO doctores (id_usuario, numero_licencia, bio)
-         VALUES (?,?,?)
-         ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio)`,
-        [usuarioId, doctor.licencia, doctor.bio]
-      );
+      const [especialidadRows] = await connection.query('SELECT id, nombre FROM especialidades');
+      const especialidadMap = new Map(especialidadRows.map(row => [row.nombre, row.id]));
 
-      await connection.query(
-        `INSERT INTO doctores_especialidades (id_doctor, id_especialidad)
-         VALUES (?,?)
-         ON DUPLICATE KEY UPDATE id_doctor = id_doctor`,
-        [usuarioId, especialidadId]
-      );
+      // Doctores
+      for (const doctor of doctoresBase) {
+        const especialidadId = especialidadMap.get(doctor.especialidad);
+        if (!especialidadId) continue;
+
+        const [usuarioRows] = await connection.query('SELECT id FROM usuarios WHERE email = ?', [doctor.email]);
+        let usuarioId;
+        if (usuarioRows.length) {
+          usuarioId = usuarioRows[0].id;
+          await connection.query(`UPDATE usuarios SET nombre = ?, apellido = ?, rol = 'MEDICO', dni = IFNULL(dni, ?) WHERE id = ?`, [doctor.nombre, doctor.apellido, doctor.dni, usuarioId]);
+        } else {
+          const [res] = await connection.query(`INSERT INTO usuarios (dni, email, hash_contrasena, nombre, apellido, rol, email_verificado) VALUES (?,?,?,?,?,?,1)`, [doctor.dni, doctor.email, DEFAULT_HASH, doctor.nombre, doctor.apellido, 'MEDICO']);
+          usuarioId = res.insertId;
+        }
+        await connection.query(`INSERT INTO doctores (id_usuario, numero_licencia, bio) VALUES (?,?,?) ON DUPLICATE KEY UPDATE numero_licencia = VALUES(numero_licencia), bio = VALUES(bio)`, [usuarioId, doctor.licencia, doctor.bio]);
+        await connection.query(`INSERT INTO doctores_especialidades (id_doctor, id_especialidad) VALUES (?,?) ON DUPLICATE KEY UPDATE id_doctor = id_doctor`, [usuarioId, especialidadId]);
+      }
+
+      // Secretario (HU-IN19)
+      const emailSecretario = 'secretario@clinica.local';
+      const [secRows] = await connection.query('SELECT id FROM usuarios WHERE email = ?', [emailSecretario]);
+      if (!secRows.length) {
+          await connection.query(`INSERT INTO usuarios (dni, email, hash_contrasena, nombre, apellido, rol, email_verificado) VALUES (?,?,?,?,?,?,1)`,
+              ['20000000', emailSecretario, DEFAULT_HASH, 'Carlos', 'Recepción', 'SECRETARIO']
+          );
+      }
+
+      // Pacientes de Prueba (5)
+      let pacienteIds = [];
+      for (let i = 1; i <= 5; i++) {
+          const email = `paciente${i}@demo.local`;
+          const [rows] = await connection.query('SELECT id FROM usuarios WHERE email = ?', [email]);
+          let pid;
+          if (!rows.length) {
+              const [res] = await connection.query(`INSERT INTO usuarios (dni, email, hash_contrasena, nombre, apellido, rol, email_verificado) VALUES (?,?,?,?,?,?,1)`, [`4000000${i}`, email, DEFAULT_HASH, `Paci${i}`, 'Test', 'PACIENTE']);
+              pid = res.insertId;
+              await connection.query('INSERT IGNORE INTO pacientes (id_usuario) VALUES (?)', [pid]);
+          } else {
+              pid = rows[0].id;
+          }
+          pacienteIds.push(pid);
+      }
+
+      // Generador de 150 Turnos Históricos y Futuros (HU-IN20)
+      const [conteoTurnos] = await connection.query('SELECT COUNT(*) as c FROM turnos');
+      if (conteoTurnos[0].c === 0 && pacienteIds.length > 0) {
+          const [docsDb] = await connection.query('SELECT d.id_usuario as id_doctor, de.id_especialidad FROM doctores d JOIN doctores_especialidades de ON d.id_usuario = de.id_doctor');
+          
+          const [estadosRows] = await connection.query('SELECT id, valor FROM estados');
+          const estadosIdMap = {};
+          estadosRows.forEach(e => estadosIdMap[e.valor] = e.id);
+
+          if (docsDb.length > 0) {
+              for (let i = 0; i < 150; i++) {
+                  const isPast = Math.random() > 0.25; 
+                  const daysOffset = isPast ? -Math.floor(Math.random() * 30) : Math.floor(Math.random() * 5);
+                  const hour = 9 + Math.floor(Math.random() * 8); 
+                  
+                  const d = new Date();
+                  d.setDate(d.getDate() + daysOffset);
+                  d.setHours(hour, (Math.random() > 0.5 ? 30 : 0), 0, 0);
+                  
+                  const fechaStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:00`;
+
+                  const doc = docsDb[Math.floor(Math.random() * docsDb.length)];
+                  const pacId = pacienteIds[Math.floor(Math.random() * pacienteIds.length)];
+
+                  let estadoVal = 'Pendiente';
+                  if (isPast) {
+                      estadoVal = Math.random() > 0.2 ? 'Atendido' : 'Cancelado';
+                  } else if (daysOffset === 0) {
+                      estadoVal = Math.random() > 0.5 ? 'Confirmado' : 'Pendiente';
+                  }
+
+                  const [res] = await connection.query(`INSERT INTO turnos (id_paciente, id_doctor, id_especialidad, fecha_turno) VALUES (?, ?, ?, ?)`, [pacId, doc.id_doctor, doc.id_especialidad, fechaStr]);
+                  const turnoId = res.insertId;
+
+                  await connection.query(`INSERT INTO turnos_estado (id_turno, id_estado, fecha) VALUES (?, ?, DATE_SUB(?, INTERVAL 1 HOUR))`, [turnoId, estadosIdMap['Pendiente'], fechaStr]);
+                  
+                  if (estadoVal !== 'Pendiente') {
+                      await connection.query(`INSERT INTO turnos_estado (id_turno, id_estado, fecha) VALUES (?, ?, ?)`, [turnoId, estadosIdMap[estadoVal], fechaStr]);
+                  }
+
+                  if (estadoVal === 'Cancelado') {
+                      await connection.query(`INSERT INTO turnos_cancelaciones (turno_id, motivo, actor) VALUES (?, ?, ?)`, [turnoId, 'Motivos personales / Ausentismo', 'PACIENTE']);
+                  }
+              }
+          }
+      }
+
+      await connection.commit();
+      console.log('Base de datos validada y poblada exitosamente.');
+      return; // Carga exitosa, salimos de la función sin reintentar
+
+    } catch (err) {
+      if (connection) {
+        try { await connection.rollback(); } catch(e) {}
+      }
+      
+      console.warn(`Intento ${attempt}/${maxRetries} falló: ${err.message}`);
+      
+      if (attempt < maxRetries) {
+        console.log(`Reintentando seed en ${retryDelay / 1000} segundos...`);
+        await sleep(retryDelay);
+      } else {
+        console.error('Se agotaron los reintentos para la carga inicial de datos.');
+      }
+      
+    } finally {
+      if (connection) connection.release();
     }
-
-    await connection.commit();
-  } catch (err) {
-    if (connection) await connection.rollback();
-    console.error('Error al ejecutar la carga inicial:', err.message);
-  } finally {
-    if (connection) connection.release();
   }
 }
 

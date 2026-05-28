@@ -382,6 +382,14 @@ export async function listAll(filters = {}) {
       baseQuery += ` AND DATE(t.fecha_turno) = ?`;
       queryParams.push(filters.date);
   }
+  if (filters.startDate) {
+      baseQuery += ` AND DATE(t.fecha_turno) >= ?`;
+      queryParams.push(filters.startDate);
+  }
+  if (filters.endDate) {
+      baseQuery += ` AND DATE(t.fecha_turno) <= ?`;
+      queryParams.push(filters.endDate);
+  }
 
   let finalQuery = `SELECT * FROM (${baseQuery}) AS sub`;
   

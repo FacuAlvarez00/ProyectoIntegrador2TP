@@ -5,7 +5,7 @@ import { requireAuth, requireRole } from '../middleware/auth.js';
 const router = Router();
 
 // HU17 (ADMIN): Listar todos los turnos con filtros query param: ?status=Pendiente&doctor_id=1&date=2024-05-20
-router.get('/all', requireAuth, requireRole('ADMIN'), ctrl.listAllForAdmin);
+router.get('/all', requireAuth, requireRole('ADMIN', 'SECRETARIO'), ctrl.listAllForAdmin);
 
 router.get('/my', requireAuth, requireRole('PACIENTE', 'ADMIN'), ctrl.listMine);
 router.get('/doctor/my', requireAuth, requireRole('MEDICO', 'ADMIN'), ctrl.listForDoctor);

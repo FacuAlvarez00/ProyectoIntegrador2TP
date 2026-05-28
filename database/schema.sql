@@ -180,6 +180,19 @@ CREATE TABLE password_resets (
 ) ENGINE=InnoDB;
 
 -- =====================
+-- Tabla: Informes de Gestión
+-- =====================
+CREATE TABLE informes_gestion (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  periodo_mes VARCHAR(7) NOT NULL,                -- Formato: 'YYYY-MM'
+  total_turnos INT NOT NULL DEFAULT 0,
+  tasa_ausentismo DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  productividad_por_medico JSON,                  -- Detalle estructurado de métricas por profesional
+  promedio_espera_paciente DECIMAL(5,2) NOT NULL DEFAULT 0.00,
+  creado TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- =====================
 -- Datos base (semillas)
 -- =====================
 INSERT INTO estados (valor) VALUES
