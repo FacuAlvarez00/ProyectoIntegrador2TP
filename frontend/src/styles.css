@@ -1197,20 +1197,44 @@ header .d-flex:first-child {
   color: #fff;
 }
 
-.cancel-btn {
-  background: #ef5350;
+.reschedule-btn {
+  background: linear-gradient(135deg, #f7971e 0%, #e67e22 100%);
   color: white;
   border: none;
-  padding: 8px 16px;
+  padding: 8px 18px;
   border-radius: 6px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.3s ease;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+  box-shadow: 0 3px 10px rgba(230, 126, 34, 0.35);
+  transition: all 0.25s ease;
+}
+
+.reschedule-btn:hover {
+  background: linear-gradient(135deg, #f5a623 0%, #d35400 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(230, 126, 34, 0.5);
+}
+
+.cancel-btn {
+  background: linear-gradient(135deg, #ef5350 0%, #c62828 100%);
+  color: white;
+  border: none;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.3px;
+  box-shadow: 0 3px 10px rgba(239, 83, 80, 0.35);
+  transition: all 0.25s ease;
 }
 
 .cancel-btn:hover {
-  background: #e53935;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #f44336 0%, #b71c1c 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 5px 16px rgba(239, 83, 80, 0.5);
 }
 
 .empty-state {

@@ -132,17 +132,16 @@ export async function createAppointment({ patientId, doctorId, specialtyId, date
                   ORDER BY te.fecha DESC, te.id DESC
                   LIMIT 1
                 ),
-                'Pendiente'
+                'Confirmado'
               ) AS estado
        FROM turnos t
-       WHERE t.id_doctor = ? 
-         AND t.fecha_turno > DATE_SUB(?, INTERVAL 30 MINUTE)
-         AND t.fecha_turno < DATE_ADD(?, INTERVAL 30 MINUTE)
+       WHERE t.id_doctor = ?
+         AND t.fecha_turno = ?
        LIMIT 1`,
-      [doctorId, fechaTurno, fechaTurno]
+      [doctorId, fechaTurno]
     );
     if (conflictRows.length && conflictRows[0].estado !== 'Cancelado') {
-      throw new BadRequest('El turno ya está reservado o interfiere con un turno ocupado en el mismo rango de horario.');
+      throw new BadRequest('Ese horario ya está reservado. Por favor elegí otra fecha u hora.');
     }
 
     const [res] = await conn.query(
@@ -152,10 +151,10 @@ export async function createAppointment({ patientId, doctorId, specialtyId, date
     );
     const turnoId = res.insertId;
 
-    const estadoPendienteId = await getEstadoId(conn, 'Pendiente');
+    const estadoConfirmadoId = await getEstadoId(conn, 'Confirmado');
     await conn.query(
       'INSERT INTO turnos_estado (id_turno, id_estado) VALUES (?, ?)',
-      [turnoId, estadoPendienteId]
+      [turnoId, estadoConfirmadoId]
     );
 
     await conn.commit();
@@ -313,7 +312,6 @@ export async function updateAppointment(appointmentId, userId, role, { date, tim
       throw new BadRequest('No se puede reprogramar un turno ya cancelado o atendido');
     }
 
-    // Verificar si no hay solapamiento (Misma lógica que al crear)
     const [conflictRows] = await conn.query(
       `SELECT t.id,
               COALESCE(
@@ -323,19 +321,18 @@ export async function updateAppointment(appointmentId, userId, role, { date, tim
                    WHERE te.id_turno = t.id
                    ORDER BY te.fecha DESC, te.id DESC
                    LIMIT 1
-                ), 'Pendiente'
+                ), 'Confirmado'
               ) AS estado
        FROM turnos t
        WHERE t.id_doctor = ?
          AND t.id != ?
-         AND t.fecha_turno > DATE_SUB(?, INTERVAL 30 MINUTE)
-         AND t.fecha_turno < DATE_ADD(?, INTERVAL 30 MINUTE)
+         AND t.fecha_turno = ?
        LIMIT 1`,
-      [turno.id_doctor, appointmentId, nuevaFechaTurno, nuevaFechaTurno]
+      [turno.id_doctor, appointmentId, nuevaFechaTurno]
     );
 
     if (conflictRows.length && conflictRows[0].estado !== 'Cancelado') {
-      throw new BadRequest('El nuevo horario interfiere con otro turno asignado en la agenda.');
+      throw new BadRequest('Ese horario ya está reservado. Por favor elegí otro.');
     }
 
     await conn.query(`UPDATE turnos SET fecha_turno = ? WHERE id = ?`, [nuevaFechaTurno, appointmentId]);

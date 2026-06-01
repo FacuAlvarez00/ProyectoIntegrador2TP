@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { api } from '../api.js';
 
+const getMinDate = () => {
+  const d = new Date();
+  d.setDate(d.getDate() + 3);
+  return d.toLocaleDateString('en-CA');
+};
+
 export default function PatientDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const [appointments, setAppointments] = useState([]);
@@ -76,6 +82,11 @@ export default function PatientDashboard() {
       return;
     }
 
+    if (newAppointment.date < getMinDate()) {
+      setError('La fecha del turno debe ser con al menos 3 días de anticipación.');
+      return;
+    }
+
     try {
       await api('/appointments', {
         method: 'POST',
@@ -118,6 +129,11 @@ export default function PatientDashboard() {
     e.preventDefault();
     if (!rescheduleData.date || !rescheduleData.time) {
       alert('Debes seleccionar nueva fecha y hora.');
+      return;
+    }
+
+    if (rescheduleData.date < getMinDate()) {
+      alert('La nueva fecha debe ser con al menos 3 días de anticipación.');
       return;
     }
 
@@ -267,7 +283,7 @@ export default function PatientDashboard() {
                             <input 
                               type="date"
                               value={rescheduleData.date}
-                              min={new Date().toLocaleDateString('en-CA')}
+                              min={getMinDate()}
                               onChange={(e) => setRescheduleData({...rescheduleData, date: e.target.value})}
                               required
                             />
@@ -316,19 +332,18 @@ export default function PatientDashboard() {
                       {!isInactive && appointment.status !== 'Cancelado' && appointment.status !== 'Atendido' && (
                         <>
                           {reschedulingId !== appointment.id && (
-                            <button 
-                              className="action-btn secondary"
-                              style={{ marginRight: '10px' }}
+                            <button
+                              className="reschedule-btn"
+                              style={{ marginRight: '8px' }}
                               onClick={() => {
                                 setReschedulingId(appointment.id);
-                                // Pre-cargar la fecha y hora original (asumiendo que formatTime devuelve HH:mm)
                                 setRescheduleData({
-                                  date: appointment.date.split('T')[0], 
+                                  date: appointment.date.split('T')[0],
                                   time: appointment.time.substring(0, 5)
                                 });
                               }}
                             >
-                              Reprogramar
+                              📅 Reprogramar
                             </button>
                           )}
                           <button 
@@ -403,7 +418,7 @@ export default function PatientDashboard() {
                       ...newAppointment,
                       date: e.target.value
                     })}
-                    min={new Date().toLocaleDateString('en-CA')}
+                    min={getMinDate()}
                     onClick={(e) => { try { e.target.showPicker(); } catch {} }}
                     onKeyDown={(e) => {
                       if (e.key !== 'Tab' && e.key !== 'Enter' && e.key !== 'Escape') {
@@ -412,10 +427,7 @@ export default function PatientDashboard() {
                     }}
                     onPaste={(e) => e.preventDefault()}
                     onInput={(e) => {
-                      const selectedDate = new Date(e.target.value);
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-                      if (selectedDate < today) {
+                      if (e.target.value < getMinDate()) {
                         e.target.value = '';
                         setNewAppointment({ ...newAppointment, date: '' });
                       }
