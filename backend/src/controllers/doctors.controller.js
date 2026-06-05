@@ -9,3 +9,13 @@ export async function list(req, res, next) {
   }
 }
 
+export async function create(req, res, next) {
+  try {
+    const { nombre, apellido, email, password, dni, specialty_id } = req.body;
+    const doctor = await svc.createDoctor({ nombre, apellido, email, password, dni, specialty_id });
+    res.status(201).json(doctor);
+  } catch (err) {
+    next(err);
+  }
+}
+
